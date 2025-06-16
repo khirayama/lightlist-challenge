@@ -10,7 +10,8 @@
 │   └── native/                 # React Native/Expo モバイルアプリ
 ├── packages/                   # 共通ライブラリやコンポーネント
 │   ├── styles/                 # 共通スタイル、トークン、コンポーネント
-|   |   ├── tailwind.config.js  # Tailwind CSS 設定
+|   |   ├── tailwind.config.js  # 共通 Tailwind CSS 設定（WebとNativeで共有）
+|   |   └── index.js           # 設定のエクスポート
 │   └── sdk/                    # 共通SDKライブラリ(APIラッパーな側面が強い)
 ├── docs/                       # ドキュメント
 ├── biome.json                  # Biome 設定
@@ -58,12 +59,18 @@
 - React Native
 - TypeScript
 - Expo
-- NativeWind
+- NativeWind（Tailwind CSSライクなスタイリング）
 - Expo Router
 - i18next
 - Biome
 - Prettier
 - Vitest
+
+**NativeWind設定**：
+- packages/stylesの共通Tailwind設定を使用
+- babel.config.jsでnativewind/babelプラグインを設定
+- metro.config.jsでwithNativeWindを設定
+- src/styles/global.cssでTailwindディレクティブを設定
 
 ## 環境設定
 

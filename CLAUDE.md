@@ -11,6 +11,8 @@
 
 @docs/TODO.md
 
+- docs/TODO.mdは更新しないでください。次のTODOを決めるためのプロンプトです。
+
 ## SPEC
 
 @docs/SPEC.md
