@@ -1,0 +1,26 @@
+{
+  "app": {
+    "title": "Hobby Baseline",
+    "description": "A multi-platform application"
+  },
+  "home": {
+    "title": "Hello World",
+    "subtitle": "Welcome to Hobby Baseline Application",
+    "goToSettings": "Go to Settings"
+  },
+  "settings": {
+    "title": "Settings",
+    "theme": {
+      "title": "Theme",
+      "system": "System",
+      "light": "Light",
+      "dark": "Dark"
+    },
+    "language": {
+      "title": "Language",
+      "japanese": "日本語",
+      "english": "English"
+    },
+    "backToHome": "Back to Home"
+  }
+}
