@@ -38,7 +38,7 @@ export default function SettingsScreen() {
         <TouchableOpacity
           style={[
             styles.radioItem,
-            theme === 'system' ? styles.radioItemSelected : (isDark ? styles.radioItemDark : styles.radioItemLight)
+            theme === 'system' ? (isDark ? styles.radioItemSelectedDark : styles.radioItemSelected) : (isDark ? styles.radioItemDark : styles.radioItemLight)
           ]}
           onPress={() => setTheme('system')}
         >
@@ -51,7 +51,7 @@ export default function SettingsScreen() {
         <TouchableOpacity
           style={[
             styles.radioItem,
-            theme === 'light' ? styles.radioItemSelected : (isDark ? styles.radioItemDark : styles.radioItemLight)
+            theme === 'light' ? (isDark ? styles.radioItemSelectedDark : styles.radioItemSelected) : (isDark ? styles.radioItemDark : styles.radioItemLight)
           ]}
           onPress={() => setTheme('light')}
         >
@@ -64,7 +64,7 @@ export default function SettingsScreen() {
         <TouchableOpacity
           style={[
             styles.radioItem,
-            theme === 'dark' ? styles.radioItemSelected : (isDark ? styles.radioItemDark : styles.radioItemLight)
+            theme === 'dark' ? (isDark ? styles.radioItemSelectedDark : styles.radioItemSelected) : (isDark ? styles.radioItemDark : styles.radioItemLight)
           ]}
           onPress={() => setTheme('dark')}
         >
@@ -83,7 +83,7 @@ export default function SettingsScreen() {
         <TouchableOpacity
           style={[
             styles.radioItem,
-            currentLanguage === 'ja' ? styles.radioItemSelected : (isDark ? styles.radioItemDark : styles.radioItemLight)
+            currentLanguage === 'ja' ? (isDark ? styles.radioItemSelectedDark : styles.radioItemSelected) : (isDark ? styles.radioItemDark : styles.radioItemLight)
           ]}
           onPress={() => changeLanguage('ja')}
         >
@@ -96,7 +96,7 @@ export default function SettingsScreen() {
         <TouchableOpacity
           style={[
             styles.radioItem,
-            currentLanguage === 'en' ? styles.radioItemSelected : (isDark ? styles.radioItemDark : styles.radioItemLight)
+            currentLanguage === 'en' ? (isDark ? styles.radioItemSelectedDark : styles.radioItemSelected) : (isDark ? styles.radioItemDark : styles.radioItemLight)
           ]}
           onPress={() => changeLanguage('en')}
         >
@@ -162,6 +162,10 @@ const styles = StyleSheet.create({
   radioItemSelected: {
     borderColor: '#005AAF',
     backgroundColor: '#F0F8FF',
+  },
+  radioItemSelectedDark: {
+    borderColor: '#005AAF',
+    backgroundColor: '#1E40AF',
   },
   radio: {
     width: 20,
