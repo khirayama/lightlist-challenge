@@ -11,7 +11,7 @@
     "test": "vitest",
     "check": "tsc --noEmit && biome check ./src",
     "clean": "rm -rf dist node_modules",
-    "setup": "node scripts/setup.js",
+    "setup": "[ -f .env ] || cp .env.example .env",
     "db:push": "prisma db push",
     "db:migrate": "prisma migrate dev",
     "db:studio": "prisma studio"
