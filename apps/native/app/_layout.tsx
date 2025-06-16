@@ -3,6 +3,7 @@ import { StatusBar } from 'expo-status-bar';
 import { useEffect, useState } from 'react';
 import { initI18n } from '../src/lib/i18n';
 import { ThemeProvider, useTheme } from '../src/contexts/ThemeContext';
+import { AuthProvider } from '../src/contexts/AuthContext';
 
 function RootLayoutContent() {
   const { resolvedTheme } = useTheme();
@@ -32,7 +33,9 @@ export default function RootLayout() {
 
   return (
     <ThemeProvider>
-      <RootLayoutContent />
+      <AuthProvider>
+        <RootLayoutContent />
+      </AuthProvider>
     </ThemeProvider>
   );
 }
