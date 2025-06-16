@@ -55,6 +55,12 @@ coverage/
 *.db
 *.db-journal
 
+# Docker
+postgres-data/
+
+# TypeScript
+*.tsbuildinfo
+
 # Temporary files
 tmp/
 temp/

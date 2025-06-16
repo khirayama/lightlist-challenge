@@ -1,0 +1,26 @@
+{
+  "name": "hobby-baseline",
+  "version": "1.0.0",
+  "private": true,
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
+  "scripts": {
+    "dev": "turbo dev",
+    "build": "turbo build",
+    "test": "turbo test",
+    "check": "turbo check",
+    "clean": "turbo clean && rm -rf node_modules",
+    "setup": "turbo setup"
+  },
+  "devDependencies": {
+    "@biomejs/biome": "^1.9.4",
+    "prettier": "^3.4.2",
+    "turbo": "^2.3.3",
+    "typescript": "^5.7.2"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}

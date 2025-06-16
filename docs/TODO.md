@@ -2,15 +2,12 @@
 
 ## 次のタスク
 
-まずはコミット
+docs/DEV.mdを参考に、apps/apiのセットアップを進めてください。
+まずはdocker-composeを使用して、postgresを起動できるようにしてください。それ以外はまだ行わないでください。
 
 
 ## 次以降のタスク
 
-docs/DEV.mdを参考に、apps/apiのセットアップを進めてください。
-この際、以下の点を満たす様にしてください。
-
-- docker-composeを使用して、postgresを起動する
 - npm run setupで、.envファイルの作成とprismのマイグレーションを実行する
 - npm run devで、APIサーバーを起動する
 - 簡単なAPIエンドポイントを実装し、動作確認を行う
