@@ -8,7 +8,7 @@
     "start": "next start",
     "lint": "next lint",
     "check": "tsc --noEmit",
-    "setup": "cp .env.example .env"
+    "setup": "[ -f .env ] || cp .env.example .env"
   },
   "dependencies": {
     "next": "^15.0.0",
