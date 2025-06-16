@@ -1,8 +1,11 @@
-import express from 'express';
-import cors from 'cors';
-import helmet from 'helmet';
-import rateLimit from 'express-rate-limit';
-import dotenv from 'dotenv';
+import cors from "cors";
+import dotenv from "dotenv";
+import express from "express";
+import rateLimit from "express-rate-limit";
+import helmet from "helmet";
+import authRoutes from "./routes/auth.js";
+import usersRoutes from "./routes/users.js";
+import "./types/express.js";
 
 dotenv.config();
 
@@ -17,15 +20,18 @@ const limiter = rateLimit({
   windowMs: Number(process.env.API_RATE_LIMIT_WINDOW_MS) || 15 * 60 * 1000,
   max: Number(process.env.API_RATE_LIMIT_MAX) || 100,
 });
-app.use('/api', limiter);
+app.use("/api", limiter);
 
-app.get('/health', (req, res) => {
-  res.json({ status: 'ok', timestamp: new Date().toISOString() });
+app.get("/health", (_req, res) => {
+  res.json({ status: "ok", timestamp: new Date().toISOString() });
 });
 
-app.get('/api/hello', (req, res) => {
-  res.json({ message: 'Hello from Hobby Baseline API!' });
+app.get("/api/hello", (_req, res) => {
+  res.json({ message: "Hello from Hobby Baseline API!" });
 });
+
+app.use("/api/auth", authRoutes);
+app.use("/api/users", usersRoutes);
 
 app.listen(PORT, () => {
   console.log(`API server is running on http://localhost:${PORT}`);
