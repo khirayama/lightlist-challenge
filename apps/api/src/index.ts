@@ -5,7 +5,6 @@ import rateLimit from "express-rate-limit";
 import helmet from "helmet";
 import authRoutes from "./routes/auth.js";
 import usersRoutes from "./routes/users.js";
-import "./types/express.js";
 
 dotenv.config();
 

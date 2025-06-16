@@ -22,5 +22,23 @@
       "english": "English"
     },
     "backToHome": "ホームに戻る"
+  },
+  "auth": {
+    "login": "ログイン",
+    "register": "ユーザー登録",
+    "logout": "ログアウト",
+    "email": "メールアドレス",
+    "password": "パスワード",
+    "confirmPassword": "パスワード確認",
+    "emailPlaceholder": "メールアドレスを入力",
+    "passwordPlaceholder": "パスワードを入力",
+    "confirmPasswordPlaceholder": "パスワードを再入力",
+    "loggingIn": "ログイン中...",
+    "registering": "登録中...",
+    "loginError": "ログインに失敗しました",
+    "registerError": "ユーザー登録に失敗しました",
+    "passwordMismatch": "パスワードが一致しません",
+    "noAccount": "アカウントをお持ちでない方は",
+    "alreadyHaveAccount": "既にアカウントをお持ちの方は"
   }
 }

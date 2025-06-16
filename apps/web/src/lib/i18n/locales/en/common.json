@@ -22,5 +22,23 @@
       "english": "English"
     },
     "backToHome": "Back to Home"
+  },
+  "auth": {
+    "login": "Login",
+    "register": "Register",
+    "logout": "Logout",
+    "email": "Email",
+    "password": "Password",
+    "confirmPassword": "Confirm Password",
+    "emailPlaceholder": "Enter your email",
+    "passwordPlaceholder": "Enter your password",
+    "confirmPasswordPlaceholder": "Re-enter your password",
+    "loggingIn": "Logging in...",
+    "registering": "Registering...",
+    "loginError": "Login failed",
+    "registerError": "Registration failed",
+    "passwordMismatch": "Passwords do not match",
+    "noAccount": "Don't have an account?",
+    "alreadyHaveAccount": "Already have an account?"
   }
 }

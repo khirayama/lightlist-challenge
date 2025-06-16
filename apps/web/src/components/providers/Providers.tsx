@@ -2,6 +2,7 @@
 
 import { I18nProvider } from './I18nProvider';
 import { ThemeProvider } from './ThemeProvider';
+import { AuthProvider } from '@/contexts/AuthContext';
 
 interface ProvidersProps {
   children: React.ReactNode;
@@ -16,7 +17,9 @@ export function Providers({ children }: ProvidersProps) {
       disableTransitionOnChange
     >
       <I18nProvider>
-        {children}
+        <AuthProvider>
+          {children}
+        </AuthProvider>
       </I18nProvider>
     </ThemeProvider>
   );
