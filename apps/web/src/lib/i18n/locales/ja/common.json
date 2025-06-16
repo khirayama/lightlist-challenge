@@ -1,0 +1,26 @@
+{
+  "app": {
+    "title": "Hobby Baseline",
+    "description": "マルチプラットフォーム対応のアプリケーション"
+  },
+  "home": {
+    "title": "Hello World",
+    "subtitle": "Hobby Baseline アプリケーションへようこそ",
+    "goToSettings": "設定ページへ"
+  },
+  "settings": {
+    "title": "設定",
+    "theme": {
+      "title": "テーマ",
+      "system": "システム",
+      "light": "ライト",
+      "dark": "ダーク"
+    },
+    "language": {
+      "title": "言語",
+      "japanese": "日本語",
+      "english": "English"
+    },
+    "backToHome": "ホームに戻る"
+  }
+}
