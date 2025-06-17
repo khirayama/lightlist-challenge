@@ -14,7 +14,8 @@ import type {
 import { 
   generateAccessToken, 
   generateRefreshToken, 
-  getRefreshTokenExpiresAt 
+  getRefreshTokenExpiresAt,
+  getAccessTokenExpiresAt 
 } from "../utils/jwt.js";
 
 const prisma = new PrismaClient();
@@ -56,6 +57,7 @@ export class AuthService {
       userId: user.id,
       email: user.email,
     });
+    const accessTokenExpiresAt = getAccessTokenExpiresAt();
 
     const refreshToken = generateRefreshToken();
     const refreshTokenExpiresAt = getRefreshTokenExpiresAt();
@@ -73,6 +75,7 @@ export class AuthService {
       user,
       token: accessToken,
       refreshToken,
+      expiresAt: accessTokenExpiresAt,
     };
   }
 
@@ -103,6 +106,7 @@ export class AuthService {
       userId: user.id,
       email: user.email,
     });
+    const accessTokenExpiresAt = getAccessTokenExpiresAt();
 
     const refreshToken = generateRefreshToken();
     const refreshTokenExpiresAt = getRefreshTokenExpiresAt();
@@ -138,6 +142,7 @@ export class AuthService {
       },
       token: accessToken,
       refreshToken,
+      expiresAt: accessTokenExpiresAt,
     };
   }
 
@@ -258,6 +263,7 @@ export class AuthService {
       userId: storedRefreshToken.user.id,
       email: storedRefreshToken.user.email,
     });
+    const newAccessTokenExpiresAt = getAccessTokenExpiresAt();
 
     // 新しいリフレッシュトークンを生成
     const newRefreshToken = generateRefreshToken();
@@ -275,6 +281,7 @@ export class AuthService {
     return {
       token: newAccessToken,
       refreshToken: newRefreshToken,
+      expiresAt: newAccessTokenExpiresAt,
     };
   }
 }

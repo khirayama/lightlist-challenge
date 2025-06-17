@@ -29,6 +29,9 @@ interface User {
 }
 
 export class AuthService {
+  private refreshPromise: Promise<RefreshTokenResponse> | null = null;
+  private refreshTimeoutId: NodeJS.Timeout | null = null;
+
   private async authenticatedFetch(url: string, options: RequestInit = {}): Promise<Response> {
     let token = await this.getToken();
     
@@ -52,9 +55,11 @@ export class AuthService {
     // アクセストークンが期限切れの場合、リフレッシュを試行
     if (response.status === 401) {
       try {
-        const refreshResult = await this.refreshToken();
+        const refreshResult = await this.getOrCreateRefreshPromise();
         await this.setToken(refreshResult.token);
         await this.setRefreshToken(refreshResult.refreshToken);
+        await this.setTokenExpiresAt(refreshResult.expiresAt);
+        this.scheduleProactiveRefresh(refreshResult.expiresAt);
         
         // 新しいトークンで再リクエスト
         response = await makeRequest(refreshResult.token);
@@ -63,12 +68,62 @@ export class AuthService {
         await this.removeToken();
         await this.removeRefreshToken();
         await this.removeCurrentUser();
+        await this.removeTokenExpiresAt();
+        this.clearRefreshTimeout();
         throw new Error('Authentication failed');
       }
     }
 
     return response;
   }
+
+  private async getOrCreateRefreshPromise(): Promise<RefreshTokenResponse> {
+    if (this.refreshPromise) {
+      return this.refreshPromise;
+    }
+
+    this.refreshPromise = this.refreshToken();
+    
+    try {
+      const result = await this.refreshPromise;
+      return result;
+    } finally {
+      this.refreshPromise = null;
+    }
+  }
+
+  private scheduleProactiveRefresh(expiresAt: number): void {
+    this.clearRefreshTimeout();
+    
+    const now = Math.floor(Date.now() / 1000);
+    const timeUntilExpiry = expiresAt - now;
+    
+    // 期限の5分前（300秒前）にリフレッシュ実行（ただし最低30秒は残す）
+    const refreshInSeconds = Math.max(timeUntilExpiry - 300, 30);
+    
+    if (refreshInSeconds > 0) {
+      this.refreshTimeoutId = setTimeout(async () => {
+        try {
+          const refreshResult = await this.refreshToken();
+          await this.setToken(refreshResult.token);
+          await this.setRefreshToken(refreshResult.refreshToken);
+          await this.setTokenExpiresAt(refreshResult.expiresAt);
+          this.scheduleProactiveRefresh(refreshResult.expiresAt);
+        } catch (error) {
+          console.warn('Proactive refresh failed:', error);
+          // エラーが発生してもアプリを継続させる
+        }
+      }, refreshInSeconds * 1000);
+    }
+  }
+
+  private clearRefreshTimeout(): void {
+    if (this.refreshTimeoutId) {
+      clearTimeout(this.refreshTimeoutId);
+      this.refreshTimeoutId = null;
+    }
+  }
+
   async register(data: RegisterRequest): Promise<AuthResponse> {
     try {
       const response = await fetch(`${API_BASE_URL}/api/auth/register`, {
@@ -95,6 +150,13 @@ export class AuthService {
       }
 
       const result = await response.json();
+      
+      // 有効期限情報を保存してプロアクティブリフレッシュを開始
+      if (result.data.expiresAt) {
+        await this.setTokenExpiresAt(result.data.expiresAt);
+        this.scheduleProactiveRefresh(result.data.expiresAt);
+      }
+      
       return result.data;
     } catch (error) {
       if (error instanceof TypeError && error.message.includes('fetch')) {
@@ -132,6 +194,13 @@ export class AuthService {
       }
 
       const result = await response.json();
+      
+      // 有効期限情報を保存してプロアクティブリフレッシュを開始
+      if (result.data.expiresAt) {
+        await this.setTokenExpiresAt(result.data.expiresAt);
+        this.scheduleProactiveRefresh(result.data.expiresAt);
+      }
+      
       return result.data;
     } catch (error) {
       if (error instanceof TypeError && error.message.includes('fetch')) {
@@ -154,6 +223,9 @@ export class AuthService {
     } catch (error) {
       // ネットワークエラーでもログアウト処理は続行
       console.warn('Network error during logout, but proceeding with local logout');
+    } finally {
+      // プロアクティブリフレッシュタイマーをクリア
+      this.clearRefreshTimeout();
     }
   }
 
@@ -230,6 +302,32 @@ export class AuthService {
       await AsyncStorage.removeItem('refreshToken');
     } catch (error) {
       console.error('Error removing refresh token:', error);
+    }
+  }
+
+  async getTokenExpiresAt(): Promise<number | null> {
+    try {
+      const expiresAtStr = await AsyncStorage.getItem('tokenExpiresAt');
+      return expiresAtStr ? parseInt(expiresAtStr) : null;
+    } catch (error) {
+      console.error('Error getting token expires at:', error);
+      return null;
+    }
+  }
+
+  async setTokenExpiresAt(expiresAt: number): Promise<void> {
+    try {
+      await AsyncStorage.setItem('tokenExpiresAt', expiresAt.toString());
+    } catch (error) {
+      console.error('Error setting token expires at:', error);
+    }
+  }
+
+  async removeTokenExpiresAt(): Promise<void> {
+    try {
+      await AsyncStorage.removeItem('tokenExpiresAt');
+    } catch (error) {
+      console.error('Error removing token expires at:', error);
     }
   }
 

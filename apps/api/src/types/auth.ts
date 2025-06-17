@@ -17,6 +17,7 @@ export interface AuthResponse {
   };
   token: string;
   refreshToken: string;
+  expiresAt: number; // アクセストークンの有効期限のタイムスタンプ (Unix time)
 }
 
 export interface JwtPayload {
@@ -51,4 +52,5 @@ export interface RefreshTokenRequest {
 export interface RefreshTokenResponse {
   token: string;
   refreshToken: string;
+  expiresAt: number; // アクセストークンの有効期限のタイムスタンプ (Unix time)
 }

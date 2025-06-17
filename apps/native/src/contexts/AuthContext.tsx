@@ -30,11 +30,18 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             // API呼び出しでトークンの有効性を確認
             await authService.getProfile(currentUser.id);
             setUser(currentUser);
+            
+            // プロアクティブリフレッシュを開始
+            const expiresAt = await authService.getTokenExpiresAt();
+            if (expiresAt) {
+              (authService as any).scheduleProactiveRefresh(expiresAt);
+            }
           } catch (error) {
             // トークンが無効の場合は認証状態をクリア
             await authService.removeToken();
             await authService.removeRefreshToken();
             await authService.removeCurrentUser();
+            await authService.removeTokenExpiresAt();
           }
         }
       } catch (error) {
@@ -80,6 +87,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       await authService.removeToken();
       await authService.removeRefreshToken();
       await authService.removeCurrentUser();
+      await authService.removeTokenExpiresAt();
       setUser(null);
     } finally {
       setIsLoading(false);

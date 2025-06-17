@@ -11,6 +11,26 @@ export const generateAccessToken = (payload: JwtPayload): string => {
   } as jwt.SignOptions);
 };
 
+export const getAccessTokenExpiresAt = (): number => {
+  // 有効期限の文字列を秒数に変換
+  const expiresInStr = ACCESS_TOKEN_EXPIRES_IN;
+  let expiresInSeconds: number;
+  
+  if (expiresInStr.endsWith('h')) {
+    expiresInSeconds = parseInt(expiresInStr.slice(0, -1)) * 3600;
+  } else if (expiresInStr.endsWith('m')) {
+    expiresInSeconds = parseInt(expiresInStr.slice(0, -1)) * 60;
+  } else if (expiresInStr.endsWith('s')) {
+    expiresInSeconds = parseInt(expiresInStr.slice(0, -1));
+  } else {
+    // 数値のみの場合は秒として扱う
+    expiresInSeconds = parseInt(expiresInStr);
+  }
+  
+  // 現在時刻 + 有効期限（Unix timestamp）
+  return Math.floor(Date.now() / 1000) + expiresInSeconds;
+};
+
 export const generateRefreshToken = (): string => {
   return crypto.randomBytes(32).toString("hex");
 };
