@@ -31,9 +31,9 @@ export default function Settings() {
     if (!user) return;
     
     try {
-      const settings = await authService.getSettings(user.id);
-      setTheme(settings.theme);
-      i18n.changeLanguage(settings.language);
+      const response = await authService.getSettings(user.id);
+      setTheme(response.settings.theme);
+      i18n.changeLanguage(response.settings.language);
     } catch (error) {
       console.error('Failed to load settings:', error);
     }

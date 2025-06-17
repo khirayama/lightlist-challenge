@@ -126,7 +126,7 @@ export class AuthService {
     }
   }
 
-  async getSettings(userId: string): Promise<Settings> {
+  async getSettings(userId: string): Promise<{ settings: Settings }> {
     const token = await this.getToken();
     const response = await fetch(`${API_BASE_URL}/api/users/${userId}/settings`, {
       method: 'GET',

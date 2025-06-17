@@ -30,9 +30,9 @@ export default function SettingsScreen() {
     if (!user) return;
     
     try {
-      const settings = await authService.getSettings(user.id);
-      setTheme(settings.theme);
-      changeLanguage(settings.language);
+      const response = await authService.getSettings(user.id);
+      setTheme(response.settings.theme);
+      changeLanguage(response.settings.language);
     } catch (error) {
       console.error('Failed to load settings:', error);
     }
