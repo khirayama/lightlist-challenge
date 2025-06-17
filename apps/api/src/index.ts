@@ -9,10 +9,13 @@ import usersRoutes from "./routes/users.js";
 dotenv.config();
 
 const app = express();
-const PORT = process.env.PORT || 3001;
+const PORT = Number(process.env.PORT) || 3001;
 
 app.use(helmet());
-app.use(cors());
+app.use(cors({
+  origin: true,
+  credentials: true
+}));
 app.use(express.json());
 
 const limiter = rateLimit({
@@ -32,6 +35,6 @@ app.get("/api/hello", (_req, res) => {
 app.use("/api/auth", authRoutes);
 app.use("/api/users", usersRoutes);
 
-app.listen(PORT, () => {
-  console.log(`API server is running on http://localhost:${PORT}`);
+app.listen(PORT, '0.0.0.0', () => {
+  console.log(`API server is running on http://0.0.0.0:${PORT}`);
 });
