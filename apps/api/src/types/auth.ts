@@ -16,6 +16,7 @@ export interface AuthResponse {
     name: string | null;
   };
   token: string;
+  refreshToken: string;
 }
 
 export interface JwtPayload {
@@ -39,4 +40,13 @@ export interface ResetPasswordRequest {
 
 export interface PasswordResetResponse {
   message: string;
+}
+
+export interface RefreshTokenRequest {
+  refreshToken: string;
+}
+
+export interface RefreshTokenResponse {
+  token: string;
+  refreshToken: string;
 }

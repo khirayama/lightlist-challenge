@@ -36,6 +36,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     try {
       const response = await authService.login({ email, password });
       authService.setToken(response.token);
+      authService.setRefreshToken(response.refreshToken);
       authService.setCurrentUser(response.user);
       setUser(response.user);
     } finally {
@@ -48,6 +49,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     try {
       const response = await authService.register({ email, password });
       authService.setToken(response.token);
+      authService.setRefreshToken(response.refreshToken);
       authService.setCurrentUser(response.user);
       setUser(response.user);
     } finally {
@@ -60,6 +62,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     try {
       await authService.logout();
       authService.removeToken();
+      authService.removeRefreshToken();
       authService.removeCurrentUser();
       setUser(null);
     } finally {

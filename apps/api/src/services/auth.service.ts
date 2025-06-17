@@ -7,9 +7,15 @@ import type {
   RegisterRequest, 
   RequestPasswordResetRequest, 
   ResetPasswordRequest, 
-  PasswordResetResponse 
+  PasswordResetResponse,
+  RefreshTokenRequest,
+  RefreshTokenResponse
 } from "../types/auth.js";
-import { generateToken } from "../utils/jwt.js";
+import { 
+  generateAccessToken, 
+  generateRefreshToken, 
+  getRefreshTokenExpiresAt 
+} from "../utils/jwt.js";
 
 const prisma = new PrismaClient();
 
@@ -46,14 +52,27 @@ export class AuthService {
       },
     });
 
-    const token = generateToken({
+    const accessToken = generateAccessToken({
       userId: user.id,
       email: user.email,
     });
 
+    const refreshToken = generateRefreshToken();
+    const refreshTokenExpiresAt = getRefreshTokenExpiresAt();
+
+    // リフレッシュトークンをデータベースに保存
+    await prisma.refreshToken.create({
+      data: {
+        userId: user.id,
+        token: refreshToken,
+        expiresAt: refreshTokenExpiresAt,
+      },
+    });
+
     return {
       user,
-      token,
+      token: accessToken,
+      refreshToken,
     };
   }
 
@@ -80,9 +99,35 @@ export class AuthService {
       throw new Error("Invalid email or password");
     }
 
-    const token = generateToken({
+    const accessToken = generateAccessToken({
       userId: user.id,
       email: user.email,
+    });
+
+    const refreshToken = generateRefreshToken();
+    const refreshTokenExpiresAt = getRefreshTokenExpiresAt();
+
+    // 既存の未使用リフレッシュトークンを無効化
+    await prisma.refreshToken.updateMany({
+      where: {
+        userId: user.id,
+        used: false,
+        expiresAt: {
+          gt: new Date(),
+        },
+      },
+      data: {
+        used: true,
+      },
+    });
+
+    // 新しいリフレッシュトークンを保存
+    await prisma.refreshToken.create({
+      data: {
+        userId: user.id,
+        token: refreshToken,
+        expiresAt: refreshTokenExpiresAt,
+      },
     });
 
     return {
@@ -91,7 +136,8 @@ export class AuthService {
         email: user.email,
         name: user.name,
       },
-      token,
+      token: accessToken,
+      refreshToken,
     };
   }
 
@@ -186,6 +232,49 @@ export class AuthService {
 
     return {
       message: "Password has been reset successfully",
+    };
+  }
+
+  async refreshToken(data: RefreshTokenRequest): Promise<RefreshTokenResponse> {
+    const { refreshToken } = data;
+
+    const storedRefreshToken = await prisma.refreshToken.findUnique({
+      where: { token: refreshToken },
+      include: { user: true },
+    });
+
+    if (!storedRefreshToken || storedRefreshToken.used || storedRefreshToken.expiresAt < new Date()) {
+      throw new Error("Invalid or expired refresh token");
+    }
+
+    // 現在のリフレッシュトークンを使用済みにマーク
+    await prisma.refreshToken.update({
+      where: { id: storedRefreshToken.id },
+      data: { used: true },
+    });
+
+    // 新しいアクセストークンを生成
+    const newAccessToken = generateAccessToken({
+      userId: storedRefreshToken.user.id,
+      email: storedRefreshToken.user.email,
+    });
+
+    // 新しいリフレッシュトークンを生成
+    const newRefreshToken = generateRefreshToken();
+    const newRefreshTokenExpiresAt = getRefreshTokenExpiresAt();
+
+    // 新しいリフレッシュトークンを保存
+    await prisma.refreshToken.create({
+      data: {
+        userId: storedRefreshToken.user.id,
+        token: newRefreshToken,
+        expiresAt: newRefreshTokenExpiresAt,
+      },
+    });
+
+    return {
+      token: newAccessToken,
+      refreshToken: newRefreshToken,
     };
   }
 }

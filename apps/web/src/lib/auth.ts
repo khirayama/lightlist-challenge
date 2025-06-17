@@ -1,4 +1,4 @@
-import { RegisterRequest, LoginRequest, AuthResponse } from './types/auth';
+import { RegisterRequest, LoginRequest, AuthResponse, RefreshTokenResponse } from './types/auth';
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
 
@@ -28,6 +28,46 @@ interface User {
 }
 
 export class AuthService {
+  private async authenticatedFetch(url: string, options: RequestInit = {}): Promise<Response> {
+    let token = this.getToken();
+    
+    const makeRequest = async (accessToken: string) => {
+      return fetch(url, {
+        ...options,
+        headers: {
+          ...options.headers,
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${accessToken}`,
+        },
+      });
+    };
+
+    if (!token) {
+      throw new Error('No access token available');
+    }
+
+    let response = await makeRequest(token);
+
+    // アクセストークンが期限切れの場合、リフレッシュを試行
+    if (response.status === 401) {
+      try {
+        const refreshResult = await this.refreshToken();
+        this.setToken(refreshResult.token);
+        this.setRefreshToken(refreshResult.refreshToken);
+        
+        // 新しいトークンで再リクエスト
+        response = await makeRequest(refreshResult.token);
+      } catch (error) {
+        // リフレッシュ失敗時は認証状態をクリア
+        this.removeToken();
+        this.removeRefreshToken();
+        this.removeCurrentUser();
+        throw new Error('Authentication failed');
+      }
+    }
+
+    return response;
+  }
   async register(data: RegisterRequest): Promise<AuthResponse> {
     const response = await fetch(`${API_BASE_URL}/api/auth/register`, {
       method: 'POST',
@@ -105,14 +145,51 @@ export class AuthService {
     localStorage.removeItem('currentUser');
   }
 
-  async getSettings(userId: string): Promise<{ settings: Settings }> {
-    const token = this.getToken();
-    const response = await fetch(`${API_BASE_URL}/api/users/${userId}/settings`, {
-      method: 'GET',
+  getRefreshToken(): string | null {
+    if (typeof window === 'undefined') return null;
+    return localStorage.getItem('refreshToken');
+  }
+
+  setRefreshToken(token: string): void {
+    if (typeof window === 'undefined') return;
+    localStorage.setItem('refreshToken', token);
+  }
+
+  removeRefreshToken(): void {
+    if (typeof window === 'undefined') return;
+    localStorage.removeItem('refreshToken');
+  }
+
+  async refreshToken(): Promise<RefreshTokenResponse> {
+    const refreshToken = this.getRefreshToken();
+    if (!refreshToken) {
+      throw new Error('No refresh token available');
+    }
+
+    const response = await fetch(`${API_BASE_URL}/api/auth/refresh`, {
+      method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        Authorization: `Bearer ${token}`,
       },
+      body: JSON.stringify({ refreshToken }),
+    });
+
+    if (!response.ok) {
+      // リフレッシュトークン無効の場合は削除
+      this.removeRefreshToken();
+      this.removeToken();
+      this.removeCurrentUser();
+      const errorData = await response.json();
+      throw new Error(errorData.error || 'Token refresh failed');
+    }
+
+    const result = await response.json();
+    return result.data;
+  }
+
+  async getSettings(userId: string): Promise<{ settings: Settings }> {
+    const response = await this.authenticatedFetch(`${API_BASE_URL}/api/users/${userId}/settings`, {
+      method: 'GET',
     });
 
     if (!response.ok) {
@@ -125,13 +202,8 @@ export class AuthService {
   }
 
   async updateSettings(userId: string, data: SettingsUpdateRequest): Promise<Settings> {
-    const token = this.getToken();
-    const response = await fetch(`${API_BASE_URL}/api/users/${userId}/settings`, {
+    const response = await this.authenticatedFetch(`${API_BASE_URL}/api/users/${userId}/settings`, {
       method: 'PUT',
-      headers: {
-        'Content-Type': 'application/json',
-        Authorization: `Bearer ${token}`,
-      },
       body: JSON.stringify(data),
     });
 
@@ -145,13 +217,8 @@ export class AuthService {
   }
 
   async getProfile(userId: string): Promise<User> {
-    const token = this.getToken();
-    const response = await fetch(`${API_BASE_URL}/api/users/${userId}/profile`, {
+    const response = await this.authenticatedFetch(`${API_BASE_URL}/api/users/${userId}/profile`, {
       method: 'GET',
-      headers: {
-        'Content-Type': 'application/json',
-        Authorization: `Bearer ${token}`,
-      },
     });
 
     if (!response.ok) {
@@ -164,13 +231,8 @@ export class AuthService {
   }
 
   async updateProfile(userId: string, data: ProfileUpdateRequest): Promise<User> {
-    const token = this.getToken();
-    const response = await fetch(`${API_BASE_URL}/api/users/${userId}/profile`, {
+    const response = await this.authenticatedFetch(`${API_BASE_URL}/api/users/${userId}/profile`, {
       method: 'PUT',
-      headers: {
-        'Content-Type': 'application/json',
-        Authorization: `Bearer ${token}`,
-      },
       body: JSON.stringify(data),
     });
 

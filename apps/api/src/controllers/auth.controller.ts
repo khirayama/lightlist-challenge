@@ -4,7 +4,8 @@ import type {
   LoginRequest, 
   RegisterRequest, 
   RequestPasswordResetRequest, 
-  ResetPasswordRequest 
+  ResetPasswordRequest,
+  RefreshTokenRequest
 } from "../types/auth.js";
 
 const authService = new AuthService();
@@ -92,6 +93,28 @@ export class AuthController {
       }
 
       console.error("Password reset error:", error);
+      res.status(500).json({ error: "Internal server error" });
+    }
+  }
+
+  async refreshToken(req: Request, res: Response): Promise<void> {
+    try {
+      const data: RefreshTokenRequest = req.body;
+      const result = await authService.refreshToken(data);
+
+      res.status(200).json({
+        message: "Token refreshed successfully",
+        data: result,
+      });
+    } catch (error) {
+      if (error instanceof Error) {
+        if (error.message === "Invalid or expired refresh token") {
+          res.status(401).json({ error: error.message });
+          return;
+        }
+      }
+
+      console.error("Token refresh error:", error);
       res.status(500).json({ error: "Internal server error" });
     }
   }
