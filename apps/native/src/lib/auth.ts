@@ -3,6 +3,19 @@ import { RegisterRequest, LoginRequest, AuthResponse } from './types/auth';
 
 const API_BASE_URL = 'http://localhost:3001';
 
+interface Settings {
+  id: string;
+  theme: 'system' | 'light' | 'dark';
+  language: 'ja' | 'en';
+  createdAt: string;
+  updatedAt: string;
+}
+
+interface SettingsUpdateRequest {
+  theme?: 'system' | 'light' | 'dark';
+  language?: 'ja' | 'en';
+}
+
 export class AuthService {
   async register(data: RegisterRequest): Promise<AuthResponse> {
     const response = await fetch(`${API_BASE_URL}/api/auth/register`, {
@@ -99,6 +112,45 @@ export class AuthService {
     } catch (error) {
       console.error('Error removing current user:', error);
     }
+  }
+
+  async getSettings(userId: string): Promise<Settings> {
+    const token = await this.getToken();
+    const response = await fetch(`${API_BASE_URL}/api/users/${userId}/settings`, {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${token}`,
+      },
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(errorData.error || 'Failed to get settings');
+    }
+
+    const result = await response.json();
+    return result.data;
+  }
+
+  async updateSettings(userId: string, data: SettingsUpdateRequest): Promise<Settings> {
+    const token = await this.getToken();
+    const response = await fetch(`${API_BASE_URL}/api/users/${userId}/settings`, {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify(data),
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(errorData.error || 'Failed to update settings');
+    }
+
+    const result = await response.json();
+    return result.data;
   }
 }
 

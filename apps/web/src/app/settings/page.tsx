@@ -3,22 +3,67 @@
 import { useTranslation } from 'react-i18next';
 import { useTheme } from 'next-themes';
 import { useEffect, useState } from 'react';
+import { useAuth } from '@/contexts/AuthContext';
+import { authService } from '@/lib/auth';
 
 export default function Settings() {
   const { t, i18n } = useTranslation('common');
   const { theme, setTheme, themes } = useTheme();
+  const { user, isAuthenticated } = useAuth();
   const [mounted, setMounted] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
 
   useEffect(() => {
     setMounted(true);
   }, []);
 
-  const handleLanguageChange = (lang: string) => {
-    i18n.changeLanguage(lang);
+  // ログイン時に設定を取得
+  useEffect(() => {
+    if (isAuthenticated && user) {
+      loadSettings();
+    }
+  }, [isAuthenticated, user]);
+
+  const loadSettings = async () => {
+    if (!user) return;
+    
+    try {
+      const settings = await authService.getSettings(user.id);
+      setTheme(settings.theme);
+      i18n.changeLanguage(settings.language);
+    } catch (error) {
+      console.error('Failed to load settings:', error);
+    }
   };
 
-  const handleThemeChange = (newTheme: string) => {
+  const handleLanguageChange = async (lang: string) => {
+    i18n.changeLanguage(lang);
+    
+    if (isAuthenticated && user) {
+      try {
+        setIsLoading(true);
+        await authService.updateSettings(user.id, { language: lang as 'ja' | 'en' });
+      } catch (error) {
+        console.error('Failed to update language:', error);
+      } finally {
+        setIsLoading(false);
+      }
+    }
+  };
+
+  const handleThemeChange = async (newTheme: string) => {
     setTheme(newTheme);
+    
+    if (isAuthenticated && user) {
+      try {
+        setIsLoading(true);
+        await authService.updateSettings(user.id, { theme: newTheme as 'system' | 'light' | 'dark' });
+      } catch (error) {
+        console.error('Failed to update theme:', error);
+      } finally {
+        setIsLoading(false);
+      }
+    }
   };
 
   if (!mounted) {
@@ -58,7 +103,8 @@ export default function Settings() {
                     value={themeOption}
                     checked={theme === themeOption}
                     onChange={() => handleThemeChange(themeOption)}
-                    className="w-4 h-4 text-primary border-border dark:border-gray-600 focus:ring-primary"
+                    disabled={isLoading}
+                    className="w-4 h-4 text-primary border-border dark:border-gray-600 focus:ring-primary disabled:opacity-50"
                   />
                   <span className="text-text-primary dark:text-gray-300">
                     {t(`settings.theme.${themeOption}`)}
@@ -88,7 +134,8 @@ export default function Settings() {
                     value={lang.code}
                     checked={i18n.language === lang.code}
                     onChange={() => handleLanguageChange(lang.code)}
-                    className="w-4 h-4 text-primary border-border dark:border-gray-600 focus:ring-primary"
+                    disabled={isLoading}
+                    className="w-4 h-4 text-primary border-border dark:border-gray-600 focus:ring-primary disabled:opacity-50"
                   />
                   <span className="text-text-primary dark:text-gray-300">
                     {t(lang.label)}

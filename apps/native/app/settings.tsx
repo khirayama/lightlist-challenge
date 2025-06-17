@@ -3,13 +3,67 @@ import { Link, Stack } from 'expo-router';
 import { useTranslation } from 'react-i18next';
 import { useLanguage } from '../src/lib/i18n/useLanguage';
 import { useTheme } from '../src/contexts/ThemeContext';
+import { useAuth } from '../src/contexts/AuthContext';
+import { authService } from '../src/lib/auth';
+import { useEffect, useState } from 'react';
 
 export default function SettingsScreen() {
   const { t } = useTranslation();
   const { currentLanguage, changeLanguage } = useLanguage();
   const { theme, resolvedTheme, setTheme } = useTheme();
+  const { user, isAuthenticated } = useAuth();
+  const [isLoading, setIsLoading] = useState(false);
   
   const isDark = resolvedTheme === 'dark';
+
+  // ログイン時に設定を取得
+  useEffect(() => {
+    if (isAuthenticated && user) {
+      loadSettings();
+    }
+  }, [isAuthenticated, user]);
+
+  const loadSettings = async () => {
+    if (!user) return;
+    
+    try {
+      const settings = await authService.getSettings(user.id);
+      setTheme(settings.theme);
+      changeLanguage(settings.language);
+    } catch (error) {
+      console.error('Failed to load settings:', error);
+    }
+  };
+
+  const handleThemeChange = async (newTheme: 'system' | 'light' | 'dark') => {
+    setTheme(newTheme);
+    
+    if (isAuthenticated && user) {
+      try {
+        setIsLoading(true);
+        await authService.updateSettings(user.id, { theme: newTheme });
+      } catch (error) {
+        console.error('Failed to update theme:', error);
+      } finally {
+        setIsLoading(false);
+      }
+    }
+  };
+
+  const handleLanguageChange = async (lang: 'ja' | 'en') => {
+    changeLanguage(lang);
+    
+    if (isAuthenticated && user) {
+      try {
+        setIsLoading(true);
+        await authService.updateSettings(user.id, { language: lang });
+      } catch (error) {
+        console.error('Failed to update language:', error);
+      } finally {
+        setIsLoading(false);
+      }
+    }
+  };
 
   return (
     <>
@@ -40,7 +94,8 @@ export default function SettingsScreen() {
             styles.radioItem,
             theme === 'system' ? (isDark ? styles.radioItemSelectedDark : styles.radioItemSelected) : (isDark ? styles.radioItemDark : styles.radioItemLight)
           ]}
-          onPress={() => setTheme('system')}
+          onPress={() => handleThemeChange('system')}
+          disabled={isLoading}
         >
           <View style={[styles.radio, theme === 'system' ? styles.radioSelected : (isDark ? styles.radioDark : styles.radioLight)]} />
           <Text style={[styles.radioText, isDark ? styles.titleDark : styles.titleLight]}>
@@ -53,7 +108,8 @@ export default function SettingsScreen() {
             styles.radioItem,
             theme === 'light' ? (isDark ? styles.radioItemSelectedDark : styles.radioItemSelected) : (isDark ? styles.radioItemDark : styles.radioItemLight)
           ]}
-          onPress={() => setTheme('light')}
+          onPress={() => handleThemeChange('light')}
+          disabled={isLoading}
         >
           <View style={[styles.radio, theme === 'light' ? styles.radioSelected : (isDark ? styles.radioDark : styles.radioLight)]} />
           <Text style={[styles.radioText, isDark ? styles.titleDark : styles.titleLight]}>
@@ -66,7 +122,8 @@ export default function SettingsScreen() {
             styles.radioItem,
             theme === 'dark' ? (isDark ? styles.radioItemSelectedDark : styles.radioItemSelected) : (isDark ? styles.radioItemDark : styles.radioItemLight)
           ]}
-          onPress={() => setTheme('dark')}
+          onPress={() => handleThemeChange('dark')}
+          disabled={isLoading}
         >
           <View style={[styles.radio, theme === 'dark' ? styles.radioSelected : (isDark ? styles.radioDark : styles.radioLight)]} />
           <Text style={[styles.radioText, isDark ? styles.titleDark : styles.titleLight]}>
@@ -85,7 +142,8 @@ export default function SettingsScreen() {
             styles.radioItem,
             currentLanguage === 'ja' ? (isDark ? styles.radioItemSelectedDark : styles.radioItemSelected) : (isDark ? styles.radioItemDark : styles.radioItemLight)
           ]}
-          onPress={() => changeLanguage('ja')}
+          onPress={() => handleLanguageChange('ja')}
+          disabled={isLoading}
         >
           <View style={[styles.radio, currentLanguage === 'ja' ? styles.radioSelected : (isDark ? styles.radioDark : styles.radioLight)]} />
           <Text style={[styles.radioText, isDark ? styles.titleDark : styles.titleLight]}>
@@ -98,7 +156,8 @@ export default function SettingsScreen() {
             styles.radioItem,
             currentLanguage === 'en' ? (isDark ? styles.radioItemSelectedDark : styles.radioItemSelected) : (isDark ? styles.radioItemDark : styles.radioItemLight)
           ]}
-          onPress={() => changeLanguage('en')}
+          onPress={() => handleLanguageChange('en')}
+          disabled={isLoading}
         >
           <View style={[styles.radio, currentLanguage === 'en' ? styles.radioSelected : (isDark ? styles.radioDark : styles.radioLight)]} />
           <Text style={[styles.radioText, isDark ? styles.titleDark : styles.titleLight]}>
