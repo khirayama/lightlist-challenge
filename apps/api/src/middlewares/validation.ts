@@ -29,6 +29,12 @@ export const settingsUpdateSchema = z.object({
   }),
 });
 
+export const updateProfileSchema = z.object({
+  body: z.object({
+    name: z.string().min(1, "Name cannot be empty").max(100, "Name cannot exceed 100 characters").optional(),
+  }),
+});
+
 export const userIdParamSchema = z.object({
   params: z.object({
     userId: z.string().cuid("Invalid user ID format"),

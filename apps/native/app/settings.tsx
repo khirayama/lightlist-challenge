@@ -1,4 +1,4 @@
-import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
+import { View, Text, TouchableOpacity, StyleSheet, TextInput, Alert } from 'react-native';
 import { Link, Stack } from 'expo-router';
 import { useTranslation } from 'react-i18next';
 import { useLanguage } from '../src/lib/i18n/useLanguage';
@@ -11,15 +11,18 @@ export default function SettingsScreen() {
   const { t } = useTranslation();
   const { currentLanguage, changeLanguage } = useLanguage();
   const { theme, resolvedTheme, setTheme } = useTheme();
-  const { user, isAuthenticated } = useAuth();
+  const { user, isAuthenticated, refreshAuth } = useAuth();
   const [isLoading, setIsLoading] = useState(false);
+  const [name, setName] = useState('');
+  const [isProfileLoading, setIsProfileLoading] = useState(false);
   
   const isDark = resolvedTheme === 'dark';
 
-  // ログイン時に設定を取得
+  // ログイン時に設定とプロフィールを取得
   useEffect(() => {
     if (isAuthenticated && user) {
       loadSettings();
+      loadProfile();
     }
   }, [isAuthenticated, user]);
 
@@ -32,6 +35,17 @@ export default function SettingsScreen() {
       changeLanguage(settings.language);
     } catch (error) {
       console.error('Failed to load settings:', error);
+    }
+  };
+
+  const loadProfile = async () => {
+    if (!user) return;
+    
+    try {
+      const profile = await authService.getProfile(user.id);
+      setName(profile.name || '');
+    } catch (error) {
+      console.error('Failed to load profile:', error);
     }
   };
 
@@ -65,6 +79,33 @@ export default function SettingsScreen() {
     }
   };
 
+  const handleNameUpdate = async () => {
+    if (!user || !name.trim()) {
+      Alert.alert(t('common.error'), t('settings.profile.nameRequired'));
+      return;
+    }
+    
+    try {
+      setIsProfileLoading(true);
+      const updatedUser = await authService.updateProfile(user.id, { name: name.trim() });
+      
+      // AsyncStorageとAuthContextのユーザー情報を更新
+      const currentUser = await authService.getCurrentUser();
+      if (currentUser) {
+        const updatedCurrentUser = { ...currentUser, name: updatedUser.name };
+        await authService.setCurrentUser(updatedCurrentUser);
+        await refreshAuth();
+      }
+      
+      Alert.alert(t('common.success'), t('settings.profile.updateSuccess'));
+    } catch (error) {
+      console.error('Failed to update profile:', error);
+      Alert.alert(t('common.error'), t('settings.profile.updateError'));
+    } finally {
+      setIsProfileLoading(false);
+    }
+  };
+
   return (
     <>
       <Stack.Screen 
@@ -83,6 +124,46 @@ export default function SettingsScreen() {
       <Text style={[styles.title, isDark ? styles.titleDark : styles.titleLight]}>
         {t('settings.title')}
       </Text>
+      
+      {/* プロフィール設定 */}
+      {isAuthenticated && (
+        <View style={styles.section}>
+          <Text style={[styles.sectionTitle, isDark ? styles.titleDark : styles.titleLight]}>
+            {t('settings.profile.title')}
+          </Text>
+          
+          <View style={styles.profileContainer}>
+            <Text style={[styles.inputLabel, isDark ? styles.titleDark : styles.titleLight]}>
+              {t('settings.profile.name')}
+            </Text>
+            <View style={styles.profileInputContainer}>
+              <TextInput
+                style={[
+                  styles.profileInput,
+                  isDark ? styles.profileInputDark : styles.profileInputLight
+                ]}
+                value={name}
+                onChangeText={setName}
+                placeholder={t('settings.profile.namePlaceholder')}
+                placeholderTextColor={isDark ? '#9CA3AF' : '#6B7280'}
+                editable={!isProfileLoading}
+              />
+              <TouchableOpacity
+                style={[
+                  styles.updateButton,
+                  (!name.trim() || isProfileLoading) ? styles.updateButtonDisabled : null
+                ]}
+                onPress={handleNameUpdate}
+                disabled={!name.trim() || isProfileLoading}
+              >
+                <Text style={styles.updateButtonText}>
+                  {isProfileLoading ? t('common.updating') : t('common.update')}
+                </Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      )}
       
       <View style={styles.section}>
         <Text style={[styles.sectionTitle, isDark ? styles.titleDark : styles.titleLight]}>
@@ -256,6 +337,50 @@ const styles = StyleSheet.create({
   linkText: {
     color: 'white',
     fontSize: 16,
+    fontWeight: '600',
+  },
+  profileContainer: {
+    marginTop: 8,
+  },
+  inputLabel: {
+    fontSize: 14,
+    fontWeight: '500',
+    marginBottom: 8,
+  },
+  profileInputContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  profileInput: {
+    flex: 1,
+    borderWidth: 1,
+    borderRadius: 6,
+    padding: 12,
+    fontSize: 16,
+  },
+  profileInputLight: {
+    borderColor: '#D1D5DB',
+    backgroundColor: '#ffffff',
+    color: '#111827',
+  },
+  profileInputDark: {
+    borderColor: '#4B5563',
+    backgroundColor: '#374151',
+    color: '#ffffff',
+  },
+  updateButton: {
+    backgroundColor: '#005AAF',
+    borderRadius: 6,
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+  },
+  updateButtonDisabled: {
+    backgroundColor: '#9CA3AF',
+  },
+  updateButtonText: {
+    color: 'white',
+    fontSize: 14,
     fontWeight: '600',
   },
 });

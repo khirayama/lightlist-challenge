@@ -9,18 +9,21 @@ import { authService } from '@/lib/auth';
 export default function Settings() {
   const { t, i18n } = useTranslation('common');
   const { theme, setTheme, themes } = useTheme();
-  const { user, isAuthenticated } = useAuth();
+  const { user, isAuthenticated, refreshAuth } = useAuth();
   const [mounted, setMounted] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [name, setName] = useState('');
+  const [isProfileLoading, setIsProfileLoading] = useState(false);
 
   useEffect(() => {
     setMounted(true);
   }, []);
 
-  // ログイン時に設定を取得
+  // ログイン時に設定とプロフィールを取得
   useEffect(() => {
     if (isAuthenticated && user) {
       loadSettings();
+      loadProfile();
     }
   }, [isAuthenticated, user]);
 
@@ -33,6 +36,17 @@ export default function Settings() {
       i18n.changeLanguage(settings.language);
     } catch (error) {
       console.error('Failed to load settings:', error);
+    }
+  };
+
+  const loadProfile = async () => {
+    if (!user) return;
+    
+    try {
+      const profile = await authService.getProfile(user.id);
+      setName(profile.name || '');
+    } catch (error) {
+      console.error('Failed to load profile:', error);
     }
   };
 
@@ -66,6 +80,27 @@ export default function Settings() {
     }
   };
 
+  const handleNameUpdate = async () => {
+    if (!user || !name.trim()) return;
+    
+    try {
+      setIsProfileLoading(true);
+      const updatedUser = await authService.updateProfile(user.id, { name: name.trim() });
+      
+      // localStorageとAuthContextのユーザー情報を更新
+      const currentUser = authService.getCurrentUser();
+      if (currentUser) {
+        const updatedCurrentUser = { ...currentUser, name: updatedUser.name };
+        authService.setCurrentUser(updatedCurrentUser);
+        await refreshAuth();
+      }
+    } catch (error) {
+      console.error('Failed to update profile:', error);
+    } finally {
+      setIsProfileLoading(false);
+    }
+  };
+
   if (!mounted) {
     return null;
   }
@@ -86,6 +121,39 @@ export default function Settings() {
         </div>
 
         <div className="space-y-8">
+          {/* プロフィール設定 */}
+          {isAuthenticated && (
+            <div className="bg-surface dark:bg-gray-800 p-6 rounded-lg shadow-md border border-border dark:border-gray-700">
+              <h2 className="text-xl font-semibold text-text-primary dark:text-white mb-4">
+                {t('settings.profile.title')}
+              </h2>
+              <div className="space-y-4">
+                <div>
+                  <label className="block text-sm font-medium text-text-primary dark:text-gray-300 mb-2">
+                    {t('settings.profile.name')}
+                  </label>
+                  <div className="flex space-x-3">
+                    <input
+                      type="text"
+                      value={name}
+                      onChange={(e) => setName(e.target.value)}
+                      placeholder={t('settings.profile.namePlaceholder')}
+                      disabled={isProfileLoading}
+                      className="flex-1 px-3 py-2 border border-border dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-primary focus:border-primary disabled:opacity-50 bg-background dark:bg-gray-700 text-text-primary dark:text-white"
+                    />
+                    <button
+                      onClick={handleNameUpdate}
+                      disabled={isProfileLoading || !name.trim()}
+                      className="px-4 py-2 bg-primary text-white rounded-md hover:bg-primary-600 focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                      {isProfileLoading ? t('common.updating') : t('common.update')}
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+
           {/* テーマ設定 */}
           <div className="bg-surface dark:bg-gray-800 p-6 rounded-lg shadow-md border border-border dark:border-gray-700">
             <h2 className="text-xl font-semibold text-text-primary dark:text-white mb-4">

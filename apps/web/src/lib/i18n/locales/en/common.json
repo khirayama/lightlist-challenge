@@ -10,6 +10,11 @@
   },
   "settings": {
     "title": "Settings",
+    "profile": {
+      "title": "Profile",
+      "name": "Name",
+      "namePlaceholder": "Enter your name"
+    },
     "theme": {
       "title": "Theme",
       "system": "System",
@@ -40,5 +45,9 @@
     "passwordMismatch": "Passwords do not match",
     "noAccount": "Don't have an account?",
     "alreadyHaveAccount": "Already have an account?"
+  },
+  "common": {
+    "update": "Update",
+    "updating": "Updating..."
   }
 }

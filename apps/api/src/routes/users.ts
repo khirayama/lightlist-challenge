@@ -1,7 +1,7 @@
 import { Router } from "express";
 import { UsersController } from "../controllers/users.controller.js";
 import { authenticateToken, requireOwnership } from "../middlewares/auth.js";
-import { settingsUpdateSchema, userIdParamSchema, validate } from "../middlewares/validation.js";
+import { settingsUpdateSchema, updateProfileSchema, userIdParamSchema, validate } from "../middlewares/validation.js";
 
 const router = Router();
 const usersController = new UsersController();
@@ -34,6 +34,17 @@ router.get(
   requireOwnership,
   async (req, res) => {
     await usersController.getProfile(req, res);
+  },
+);
+
+router.put(
+  "/:userId/profile",
+  validate(userIdParamSchema),
+  validate(updateProfileSchema),
+  authenticateToken,
+  requireOwnership,
+  async (req, res) => {
+    await usersController.updateProfile(req, res);
   },
 );
 

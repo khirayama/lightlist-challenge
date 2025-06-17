@@ -1,6 +1,7 @@
 import type { Request, Response } from "express";
 import { UserService } from "../services/user.service.js";
 import type { SettingsUpdateRequest } from "../types/auth.js";
+import type { UpdateProfileRequest } from "../types/user.js";
 
 const userService = new UserService();
 
@@ -69,6 +70,30 @@ export class UsersController {
       }
 
       console.error("Get profile error:", error);
+      res.status(500).json({ error: "Internal server error" });
+    }
+  }
+
+  async updateProfile(req: Request, res: Response): Promise<void> {
+    try {
+      const { userId } = req.params;
+      const data: UpdateProfileRequest = req.body;
+
+      const user = await userService.updateUserProfile(userId, data);
+
+      res.status(200).json({
+        message: "Profile updated successfully",
+        data: user,
+      });
+    } catch (error) {
+      if (error instanceof Error) {
+        if (error.message === "User not found") {
+          res.status(404).json({ error: error.message });
+          return;
+        }
+      }
+
+      console.error("Update profile error:", error);
       res.status(500).json({ error: "Internal server error" });
     }
   }

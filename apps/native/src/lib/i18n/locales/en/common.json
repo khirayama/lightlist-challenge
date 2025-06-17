@@ -11,6 +11,14 @@
   },
   "settings": {
     "title": "Settings",
+    "profile": {
+      "title": "Profile",
+      "name": "Name",
+      "namePlaceholder": "Enter your name",
+      "nameRequired": "Please enter your name",
+      "updateSuccess": "Profile updated successfully",
+      "updateError": "Failed to update profile"
+    },
     "theme": {
       "title": "Theme",
       "system": "System",
@@ -41,5 +49,11 @@
     "passwordMismatch": "Passwords do not match",
     "noAccount": "Don't have an account?",
     "alreadyHaveAccount": "Already have an account?"
+  },
+  "common": {
+    "update": "Update",
+    "updating": "Updating...",
+    "success": "Success",
+    "error": "Error"
   }
 }

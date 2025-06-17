@@ -16,6 +16,18 @@ interface SettingsUpdateRequest {
   language?: 'ja' | 'en';
 }
 
+interface ProfileUpdateRequest {
+  name?: string;
+}
+
+interface User {
+  id: string;
+  email: string;
+  name: string | null;
+  createdAt: string;
+  updatedAt: string;
+}
+
 export class AuthService {
   async register(data: RegisterRequest): Promise<AuthResponse> {
     const response = await fetch(`${API_BASE_URL}/api/auth/register`, {
@@ -151,6 +163,45 @@ export class AuthService {
 
     const result = await response.json();
     return result.data;
+  }
+
+  async getProfile(userId: string): Promise<User> {
+    const token = await this.getToken();
+    const response = await fetch(`${API_BASE_URL}/api/users/${userId}/profile`, {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${token}`,
+      },
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(errorData.error || 'Failed to get profile');
+    }
+
+    const result = await response.json();
+    return result.data.user;
+  }
+
+  async updateProfile(userId: string, data: ProfileUpdateRequest): Promise<User> {
+    const token = await this.getToken();
+    const response = await fetch(`${API_BASE_URL}/api/users/${userId}/profile`, {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify(data),
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(errorData.error || 'Failed to update profile');
+    }
+
+    const result = await response.json();
+    return result.data.user;
   }
 }
 

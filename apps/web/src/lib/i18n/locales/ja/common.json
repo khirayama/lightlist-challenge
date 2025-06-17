@@ -10,6 +10,11 @@
   },
   "settings": {
     "title": "設定",
+    "profile": {
+      "title": "プロフィール",
+      "name": "名前",
+      "namePlaceholder": "名前を入力してください"
+    },
     "theme": {
       "title": "テーマ",
       "system": "システム",
@@ -40,5 +45,9 @@
     "passwordMismatch": "パスワードが一致しません",
     "noAccount": "アカウントをお持ちでない方は",
     "alreadyHaveAccount": "既にアカウントをお持ちの方は"
+  },
+  "common": {
+    "update": "更新",
+    "updating": "更新中..."
   }
 }
