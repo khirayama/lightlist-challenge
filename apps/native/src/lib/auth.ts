@@ -70,48 +70,90 @@ export class AuthService {
     return response;
   }
   async register(data: RegisterRequest): Promise<AuthResponse> {
-    const response = await fetch(`${API_BASE_URL}/api/auth/register`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(data),
-    });
+    try {
+      const response = await fetch(`${API_BASE_URL}/api/auth/register`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(data),
+      });
 
-    if (!response.ok) {
-      const errorData = await response.json();
-      throw new Error(errorData.error || 'Registration failed');
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({ error: 'Unknown error occurred' }));
+        
+        switch (response.status) {
+          case 400:
+            throw new Error(errorData.error || 'Invalid input data');
+          case 409:
+            throw new Error('User already exists with this email');
+          case 500:
+            throw new Error('Server error. Please try again later');
+          default:
+            throw new Error(errorData.error || 'Registration failed');
+        }
+      }
+
+      const result = await response.json();
+      return result.data;
+    } catch (error) {
+      if (error instanceof TypeError && error.message.includes('fetch')) {
+        throw new Error('Network error. Please check your connection and try again');
+      }
+      throw error;
     }
-
-    const result = await response.json();
-    return result.data;
   }
 
   async login(data: LoginRequest): Promise<AuthResponse> {
-    const response = await fetch(`${API_BASE_URL}/api/auth/login`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(data),
-    });
+    try {
+      const response = await fetch(`${API_BASE_URL}/api/auth/login`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(data),
+      });
 
-    if (!response.ok) {
-      const errorData = await response.json();
-      throw new Error(errorData.error || 'Login failed');
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({ error: 'Unknown error occurred' }));
+        
+        switch (response.status) {
+          case 400:
+            throw new Error(errorData.error || 'Invalid email or password');
+          case 401:
+            throw new Error('Invalid email or password');
+          case 429:
+            throw new Error('Too many login attempts. Please try again later');
+          case 500:
+            throw new Error('Server error. Please try again later');
+          default:
+            throw new Error(errorData.error || 'Login failed');
+        }
+      }
+
+      const result = await response.json();
+      return result.data;
+    } catch (error) {
+      if (error instanceof TypeError && error.message.includes('fetch')) {
+        throw new Error('Network error. Please check your connection and try again');
+      }
+      throw error;
     }
-
-    const result = await response.json();
-    return result.data;
   }
 
   async logout(): Promise<void> {
-    const response = await fetch(`${API_BASE_URL}/api/auth/logout`, {
-      method: 'POST',
-    });
+    try {
+      const response = await fetch(`${API_BASE_URL}/api/auth/logout`, {
+        method: 'POST',
+      });
 
-    if (!response.ok) {
-      throw new Error('Logout failed');
+      if (!response.ok) {
+        // ログアウトは失敗してもクライアント側で認証状態をクリアするため、エラーをログ出力のみ
+        console.warn('Logout API call failed, but proceeding with local logout');
+      }
+    } catch (error) {
+      // ネットワークエラーでもログアウト処理は続行
+      console.warn('Network error during logout, but proceeding with local logout');
     }
   }
 

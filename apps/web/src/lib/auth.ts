@@ -69,48 +69,90 @@ export class AuthService {
     return response;
   }
   async register(data: RegisterRequest): Promise<AuthResponse> {
-    const response = await fetch(`${API_BASE_URL}/api/auth/register`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(data),
-    });
+    try {
+      const response = await fetch(`${API_BASE_URL}/api/auth/register`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(data),
+      });
 
-    if (!response.ok) {
-      const errorData = await response.json();
-      throw new Error(errorData.error || 'Registration failed');
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({ error: 'Unknown error occurred' }));
+        
+        switch (response.status) {
+          case 400:
+            throw new Error(errorData.error || 'Invalid input data');
+          case 409:
+            throw new Error('User already exists with this email');
+          case 500:
+            throw new Error('Server error. Please try again later');
+          default:
+            throw new Error(errorData.error || 'Registration failed');
+        }
+      }
+
+      const result = await response.json();
+      return result.data;
+    } catch (error) {
+      if (error instanceof TypeError && error.message.includes('fetch')) {
+        throw new Error('Network error. Please check your connection and try again');
+      }
+      throw error;
     }
-
-    const result = await response.json();
-    return result.data;
   }
 
   async login(data: LoginRequest): Promise<AuthResponse> {
-    const response = await fetch(`${API_BASE_URL}/api/auth/login`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(data),
-    });
+    try {
+      const response = await fetch(`${API_BASE_URL}/api/auth/login`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(data),
+      });
 
-    if (!response.ok) {
-      const errorData = await response.json();
-      throw new Error(errorData.error || 'Login failed');
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({ error: 'Unknown error occurred' }));
+        
+        switch (response.status) {
+          case 400:
+            throw new Error(errorData.error || 'Invalid email or password');
+          case 401:
+            throw new Error('Invalid email or password');
+          case 429:
+            throw new Error('Too many login attempts. Please try again later');
+          case 500:
+            throw new Error('Server error. Please try again later');
+          default:
+            throw new Error(errorData.error || 'Login failed');
+        }
+      }
+
+      const result = await response.json();
+      return result.data;
+    } catch (error) {
+      if (error instanceof TypeError && error.message.includes('fetch')) {
+        throw new Error('Network error. Please check your connection and try again');
+      }
+      throw error;
     }
-
-    const result = await response.json();
-    return result.data;
   }
 
   async logout(): Promise<void> {
-    const response = await fetch(`${API_BASE_URL}/api/auth/logout`, {
-      method: 'POST',
-    });
+    try {
+      const response = await fetch(`${API_BASE_URL}/api/auth/logout`, {
+        method: 'POST',
+      });
 
-    if (!response.ok) {
-      throw new Error('Logout failed');
+      if (!response.ok) {
+        // ログアウトは失敗してもクライアント側で認証状態をクリアするため、エラーをログ出力のみ
+        console.warn('Logout API call failed, but proceeding with local logout');
+      }
+    } catch (error) {
+      // ネットワークエラーでもログアウト処理は続行
+      console.warn('Network error during logout, but proceeding with local logout');
     }
   }
 
@@ -188,61 +230,129 @@ export class AuthService {
   }
 
   async getSettings(userId: string): Promise<{ settings: Settings }> {
-    const response = await this.authenticatedFetch(`${API_BASE_URL}/api/users/${userId}/settings`, {
-      method: 'GET',
-    });
+    try {
+      const response = await this.authenticatedFetch(`${API_BASE_URL}/api/users/${userId}/settings`, {
+        method: 'GET',
+      });
 
-    if (!response.ok) {
-      const errorData = await response.json();
-      throw new Error(errorData.error || 'Failed to get settings');
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({ error: 'Unknown error occurred' }));
+        
+        switch (response.status) {
+          case 403:
+            throw new Error('Access denied');
+          case 404:
+            throw new Error('Settings not found');
+          case 500:
+            throw new Error('Server error. Please try again later');
+          default:
+            throw new Error(errorData.error || 'Failed to get settings');
+        }
+      }
+
+      const result = await response.json();
+      return result.data;
+    } catch (error) {
+      if (error instanceof TypeError && error.message.includes('fetch')) {
+        throw new Error('Network error. Please check your connection and try again');
+      }
+      throw error;
     }
-
-    const result = await response.json();
-    return result.data;
   }
 
   async updateSettings(userId: string, data: SettingsUpdateRequest): Promise<Settings> {
-    const response = await this.authenticatedFetch(`${API_BASE_URL}/api/users/${userId}/settings`, {
-      method: 'PUT',
-      body: JSON.stringify(data),
-    });
+    try {
+      const response = await this.authenticatedFetch(`${API_BASE_URL}/api/users/${userId}/settings`, {
+        method: 'PUT',
+        body: JSON.stringify(data),
+      });
 
-    if (!response.ok) {
-      const errorData = await response.json();
-      throw new Error(errorData.error || 'Failed to update settings');
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({ error: 'Unknown error occurred' }));
+        
+        switch (response.status) {
+          case 400:
+            throw new Error('Invalid settings data');
+          case 403:
+            throw new Error('Access denied');
+          case 500:
+            throw new Error('Server error. Please try again later');
+          default:
+            throw new Error(errorData.error || 'Failed to update settings');
+        }
+      }
+
+      const result = await response.json();
+      return result.data;
+    } catch (error) {
+      if (error instanceof TypeError && error.message.includes('fetch')) {
+        throw new Error('Network error. Please check your connection and try again');
+      }
+      throw error;
     }
-
-    const result = await response.json();
-    return result.data;
   }
 
   async getProfile(userId: string): Promise<User> {
-    const response = await this.authenticatedFetch(`${API_BASE_URL}/api/users/${userId}/profile`, {
-      method: 'GET',
-    });
+    try {
+      const response = await this.authenticatedFetch(`${API_BASE_URL}/api/users/${userId}/profile`, {
+        method: 'GET',
+      });
 
-    if (!response.ok) {
-      const errorData = await response.json();
-      throw new Error(errorData.error || 'Failed to get profile');
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({ error: 'Unknown error occurred' }));
+        
+        switch (response.status) {
+          case 403:
+            throw new Error('Access denied');
+          case 404:
+            throw new Error('Profile not found');
+          case 500:
+            throw new Error('Server error. Please try again later');
+          default:
+            throw new Error(errorData.error || 'Failed to get profile');
+        }
+      }
+
+      const result = await response.json();
+      return result.data.user;
+    } catch (error) {
+      if (error instanceof TypeError && error.message.includes('fetch')) {
+        throw new Error('Network error. Please check your connection and try again');
+      }
+      throw error;
     }
-
-    const result = await response.json();
-    return result.data.user;
   }
 
   async updateProfile(userId: string, data: ProfileUpdateRequest): Promise<User> {
-    const response = await this.authenticatedFetch(`${API_BASE_URL}/api/users/${userId}/profile`, {
-      method: 'PUT',
-      body: JSON.stringify(data),
-    });
+    try {
+      const response = await this.authenticatedFetch(`${API_BASE_URL}/api/users/${userId}/profile`, {
+        method: 'PUT',
+        body: JSON.stringify(data),
+      });
 
-    if (!response.ok) {
-      const errorData = await response.json();
-      throw new Error(errorData.error || 'Failed to update profile');
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({ error: 'Unknown error occurred' }));
+        
+        switch (response.status) {
+          case 400:
+            throw new Error('Invalid profile data');
+          case 403:
+            throw new Error('Access denied');
+          case 500:
+            throw new Error('Server error. Please try again later');
+          default:
+            throw new Error(errorData.error || 'Failed to update profile');
+        }
+      }
+
+      const result = await response.json();
+      return result.data.user;
+    } catch (error) {
+      if (error instanceof TypeError && error.message.includes('fetch')) {
+        throw new Error('Network error. Please check your connection and try again');
+      }
+      throw error;
     }
-
-    const result = await response.json();
-    return result.data.user;
   }
 }
 

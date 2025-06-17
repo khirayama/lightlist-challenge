@@ -10,21 +10,29 @@
   },
   "settings": {
     "title": "Settings",
+    "loadError": "Failed to load settings",
     "profile": {
       "title": "Profile",
       "name": "Name",
-      "namePlaceholder": "Enter your name"
+      "namePlaceholder": "Enter your name",
+      "loadError": "Failed to load profile",
+      "updateSuccess": "Profile updated successfully",
+      "updateError": "Failed to update profile"
     },
     "theme": {
       "title": "Theme",
       "system": "System",
       "light": "Light",
-      "dark": "Dark"
+      "dark": "Dark",
+      "updateSuccess": "Theme updated successfully",
+      "updateError": "Failed to update theme"
     },
     "language": {
       "title": "Language",
       "japanese": "日本語",
-      "english": "English"
+      "english": "English",
+      "updateSuccess": "Language updated successfully",
+      "updateError": "Failed to update language"
     },
     "backToHome": "Back to Home"
   },
@@ -42,6 +50,8 @@
     "registering": "Registering...",
     "loginError": "Login failed",
     "registerError": "Registration failed",
+    "loginSuccess": "Logged in successfully",
+    "registerSuccess": "Registration completed successfully",
     "passwordMismatch": "Passwords do not match",
     "noAccount": "Don't have an account?",
     "alreadyHaveAccount": "Already have an account?",

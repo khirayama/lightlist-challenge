@@ -4,10 +4,13 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useTranslation } from 'react-i18next';
 import { useAuth } from '@/contexts/AuthContext';
+import { useToast } from '@/contexts/ToastContext';
+import { LoadingButton } from '@/components/Loading';
 
 export default function LoginPage() {
   const { t } = useTranslation('common');
   const { login, isLoading } = useAuth();
+  const { showSuccess, showError } = useToast();
   const router = useRouter();
 
   const [formData, setFormData] = useState({
@@ -29,9 +32,12 @@ export default function LoginPage() {
 
     try {
       await login(formData.email, formData.password);
+      showSuccess(t('auth.loginSuccess'));
       router.push('/');
     } catch (err) {
-      setError(err instanceof Error ? err.message : t('auth.loginError'));
+      const errorMessage = err instanceof Error ? err.message : t('auth.loginError');
+      setError(errorMessage);
+      showError(errorMessage);
     }
   };
 
@@ -90,13 +96,13 @@ export default function LoginPage() {
               </div>
             )}
 
-            <button
+            <LoadingButton
               type="submit"
-              disabled={isLoading}
+              loading={isLoading}
               className="w-full py-2 px-4 bg-primary text-white rounded-md hover:bg-primary-600 focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
             >
               {isLoading ? t('auth.loggingIn') : t('auth.login')}
-            </button>
+            </LoadingButton>
           </form>
 
           <div className="mt-6 text-center">

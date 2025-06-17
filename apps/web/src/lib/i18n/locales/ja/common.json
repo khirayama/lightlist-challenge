@@ -10,21 +10,29 @@
   },
   "settings": {
     "title": "設定",
+    "loadError": "設定の読み込みに失敗しました",
     "profile": {
       "title": "プロフィール",
       "name": "名前",
-      "namePlaceholder": "名前を入力してください"
+      "namePlaceholder": "名前を入力してください",
+      "loadError": "プロフィールの読み込みに失敗しました",
+      "updateSuccess": "プロフィールを更新しました",
+      "updateError": "プロフィールの更新に失敗しました"
     },
     "theme": {
       "title": "テーマ",
       "system": "システム",
       "light": "ライト",
-      "dark": "ダーク"
+      "dark": "ダーク",
+      "updateSuccess": "テーマを更新しました",
+      "updateError": "テーマの更新に失敗しました"
     },
     "language": {
       "title": "言語",
       "japanese": "日本語",
-      "english": "English"
+      "english": "English",
+      "updateSuccess": "言語設定を更新しました",
+      "updateError": "言語設定の更新に失敗しました"
     },
     "backToHome": "ホームに戻る"
   },
@@ -42,6 +50,8 @@
     "registering": "登録中...",
     "loginError": "ログインに失敗しました",
     "registerError": "ユーザー登録に失敗しました",
+    "loginSuccess": "ログインしました",
+    "registerSuccess": "ユーザー登録が完了しました",
     "passwordMismatch": "パスワードが一致しません",
     "noAccount": "アカウントをお持ちでない方は",
     "alreadyHaveAccount": "既にアカウントをお持ちの方は",

@@ -4,12 +4,15 @@ import { useTranslation } from 'react-i18next';
 import { useTheme } from 'next-themes';
 import { useEffect, useState } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
+import { useToast } from '@/contexts/ToastContext';
+import { LoadingButton } from '@/components/Loading';
 import { authService } from '@/lib/auth';
 
 export default function Settings() {
   const { t, i18n } = useTranslation('common');
   const { theme, setTheme, themes } = useTheme();
   const { user, isAuthenticated, refreshAuth } = useAuth();
+  const { showSuccess, showError } = useToast();
   const [mounted, setMounted] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [name, setName] = useState('');
@@ -36,6 +39,7 @@ export default function Settings() {
       i18n.changeLanguage(response.settings.language);
     } catch (error) {
       console.error('Failed to load settings:', error);
+      showError(t('settings.loadError'));
     }
   };
 
@@ -47,6 +51,7 @@ export default function Settings() {
       setName(profile.name || '');
     } catch (error) {
       console.error('Failed to load profile:', error);
+      showError(t('settings.profile.loadError'));
     }
   };
 
@@ -57,8 +62,10 @@ export default function Settings() {
       try {
         setIsLoading(true);
         await authService.updateSettings(user.id, { language: lang as 'ja' | 'en' });
+        showSuccess(t('settings.language.updateSuccess'));
       } catch (error) {
         console.error('Failed to update language:', error);
+        showError(t('settings.language.updateError'));
       } finally {
         setIsLoading(false);
       }
@@ -72,8 +79,10 @@ export default function Settings() {
       try {
         setIsLoading(true);
         await authService.updateSettings(user.id, { theme: newTheme as 'system' | 'light' | 'dark' });
+        showSuccess(t('settings.theme.updateSuccess'));
       } catch (error) {
         console.error('Failed to update theme:', error);
+        showError(t('settings.theme.updateError'));
       } finally {
         setIsLoading(false);
       }
@@ -94,8 +103,10 @@ export default function Settings() {
         authService.setCurrentUser(updatedCurrentUser);
         await refreshAuth();
       }
+      showSuccess(t('settings.profile.updateSuccess'));
     } catch (error) {
       console.error('Failed to update profile:', error);
+      showError(t('settings.profile.updateError'));
     } finally {
       setIsProfileLoading(false);
     }
@@ -141,13 +152,14 @@ export default function Settings() {
                       disabled={isProfileLoading}
                       className="flex-1 px-3 py-2 border border-border dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-primary focus:border-primary disabled:opacity-50 bg-background dark:bg-gray-700 text-text-primary dark:text-white"
                     />
-                    <button
+                    <LoadingButton
                       onClick={handleNameUpdate}
-                      disabled={isProfileLoading || !name.trim()}
+                      loading={isProfileLoading}
+                      disabled={!name.trim()}
                       className="px-4 py-2 bg-primary text-white rounded-md hover:bg-primary-600 focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed"
                     >
                       {isProfileLoading ? t('common.updating') : t('common.update')}
-                    </button>
+                    </LoadingButton>
                   </div>
                 </div>
               </div>

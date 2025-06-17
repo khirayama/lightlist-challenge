@@ -46,6 +46,8 @@
     "registering": "登録中...",
     "loginError": "ログインに失敗しました",
     "registerError": "ユーザー登録に失敗しました",
+    "loginSuccess": "ログインしました",
+    "registerSuccess": "ユーザー登録が完了しました",
     "passwordMismatch": "パスワードが一致しません",
     "noAccount": "アカウントをお持ちでない方は",
     "alreadyHaveAccount": "既にアカウントをお持ちの方は",

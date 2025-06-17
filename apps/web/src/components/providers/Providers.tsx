@@ -3,6 +3,8 @@
 import { I18nProvider } from './I18nProvider';
 import { ThemeProvider } from './ThemeProvider';
 import { AuthProvider } from '@/contexts/AuthContext';
+import { ToastProvider } from '@/contexts/ToastContext';
+import { ToastContainer } from '@/components/ToastContainer';
 
 interface ProvidersProps {
   children: React.ReactNode;
@@ -18,7 +20,10 @@ export function Providers({ children }: ProvidersProps) {
     >
       <I18nProvider>
         <AuthProvider>
-          {children}
+          <ToastProvider>
+            {children}
+            <ToastContainer />
+          </ToastProvider>
         </AuthProvider>
       </I18nProvider>
     </ThemeProvider>

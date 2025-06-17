@@ -4,10 +4,13 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useTranslation } from 'react-i18next';
 import { useAuth } from '@/contexts/AuthContext';
+import { useToast } from '@/contexts/ToastContext';
+import { LoadingButton } from '@/components/Loading';
 
 export default function RegisterPage() {
   const { t } = useTranslation('common');
   const { register, isLoading } = useAuth();
+  const { showSuccess, showError } = useToast();
   const router = useRouter();
 
   const [formData, setFormData] = useState({
@@ -29,15 +32,20 @@ export default function RegisterPage() {
     setError('');
 
     if (formData.password !== formData.confirmPassword) {
-      setError(t('auth.passwordMismatch'));
+      const errorMessage = t('auth.passwordMismatch');
+      setError(errorMessage);
+      showError(errorMessage);
       return;
     }
 
     try {
       await register(formData.email, formData.password);
+      showSuccess(t('auth.registerSuccess'));
       router.push('/');
     } catch (err) {
-      setError(err instanceof Error ? err.message : t('auth.registerError'));
+      const errorMessage = err instanceof Error ? err.message : t('auth.registerError');
+      setError(errorMessage);
+      showError(errorMessage);
     }
   };
 
@@ -104,13 +112,13 @@ export default function RegisterPage() {
               </div>
             )}
 
-            <button
+            <LoadingButton
               type="submit"
-              disabled={isLoading}
+              loading={isLoading}
               className="w-full py-2 px-4 bg-primary text-white rounded-md hover:bg-primary-600 focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
             >
               {isLoading ? t('auth.registering') : t('auth.register')}
-            </button>
+            </LoadingButton>
           </form>
 
           <div className="mt-6 text-center">

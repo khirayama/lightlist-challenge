@@ -4,11 +4,14 @@ import { useRouter } from 'expo-router';
 import { useTranslation } from 'react-i18next';
 import { useAuth } from '../src/contexts/AuthContext';
 import { useTheme } from '../src/contexts/ThemeContext';
+import { useToast } from '../src/contexts/ToastContext';
+import { LoadingButton } from '../src/components/Loading';
 
 export default function LoginPage() {
   const { t } = useTranslation('common');
   const { login, isLoading } = useAuth();
   const { resolvedTheme } = useTheme();
+  const { showSuccess, showError } = useToast();
   const router = useRouter();
   
   const isDark = resolvedTheme === 'dark';
@@ -31,9 +34,12 @@ export default function LoginPage() {
 
     try {
       await login(formData.email, formData.password);
+      showSuccess(t('auth.loginSuccess'));
       router.push('/');
     } catch (err) {
-      setError(err instanceof Error ? err.message : t('auth.loginError'));
+      const errorMessage = err instanceof Error ? err.message : t('auth.loginError');
+      setError(errorMessage);
+      showError(errorMessage);
     }
   };
 
@@ -87,15 +93,14 @@ export default function LoginPage() {
                 </View>
               ) : null}
 
-              <TouchableOpacity
+              <LoadingButton
                 onPress={handleSubmit}
-                disabled={isLoading}
-                style={[styles.button, isLoading && styles.buttonDisabled]}
+                loading={isLoading}
+                style={styles.button}
+                textStyle={styles.buttonText}
               >
-                <Text style={styles.buttonText}>
-                  {isLoading ? t('auth.loggingIn') : t('auth.login')}
-                </Text>
-              </TouchableOpacity>
+                {isLoading ? t('auth.loggingIn') : t('auth.login')}
+              </LoadingButton>
             </View>
 
             <View style={styles.footer}>

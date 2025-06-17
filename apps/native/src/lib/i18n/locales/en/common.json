@@ -46,6 +46,8 @@
     "registering": "Registering...",
     "loginError": "Login failed",
     "registerError": "Registration failed",
+    "loginSuccess": "Logged in successfully",
+    "registerSuccess": "Registration completed successfully",
     "passwordMismatch": "Passwords do not match",
     "noAccount": "Don't have an account?",
     "alreadyHaveAccount": "Already have an account?",

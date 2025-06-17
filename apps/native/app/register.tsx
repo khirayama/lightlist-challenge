@@ -4,11 +4,14 @@ import { useRouter } from 'expo-router';
 import { useTranslation } from 'react-i18next';
 import { useAuth } from '../src/contexts/AuthContext';
 import { useTheme } from '../src/contexts/ThemeContext';
+import { useToast } from '../src/contexts/ToastContext';
+import { LoadingButton } from '../src/components/Loading';
 
 export default function RegisterPage() {
   const { t } = useTranslation('common');
   const { register, isLoading } = useAuth();
   const { resolvedTheme } = useTheme();
+  const { showSuccess, showError } = useToast();
   const router = useRouter();
   
   const isDark = resolvedTheme === 'dark';
@@ -31,15 +34,20 @@ export default function RegisterPage() {
     setError('');
 
     if (formData.password !== formData.confirmPassword) {
-      setError(t('auth.passwordMismatch'));
+      const errorMessage = t('auth.passwordMismatch');
+      setError(errorMessage);
+      showError(errorMessage);
       return;
     }
 
     try {
       await register(formData.email, formData.password);
+      showSuccess(t('auth.registerSuccess'));
       router.push('/');
     } catch (err) {
-      setError(err instanceof Error ? err.message : t('auth.registerError'));
+      const errorMessage = err instanceof Error ? err.message : t('auth.registerError');
+      setError(errorMessage);
+      showError(errorMessage);
     }
   };
 
@@ -102,15 +110,14 @@ export default function RegisterPage() {
                 </View>
               ) : null}
 
-              <TouchableOpacity
+              <LoadingButton
                 onPress={handleSubmit}
-                disabled={isLoading}
-                style={[styles.button, isLoading && styles.buttonDisabled]}
+                loading={isLoading}
+                style={styles.button}
+                textStyle={styles.buttonText}
               >
-                <Text style={styles.buttonText}>
-                  {isLoading ? t('auth.registering') : t('auth.register')}
-                </Text>
-              </TouchableOpacity>
+                {isLoading ? t('auth.registering') : t('auth.register')}
+              </LoadingButton>
             </View>
 
             <View style={styles.footer}>

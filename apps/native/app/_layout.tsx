@@ -4,6 +4,8 @@ import { useEffect, useState } from 'react';
 import { initI18n } from '../src/lib/i18n';
 import { ThemeProvider, useTheme } from '../src/contexts/ThemeContext';
 import { AuthProvider } from '../src/contexts/AuthContext';
+import { ToastProvider } from '../src/contexts/ToastContext';
+import { ToastContainer } from '../src/components/ToastContainer';
 
 function RootLayoutContent() {
   const { resolvedTheme } = useTheme();
@@ -14,6 +16,7 @@ function RootLayoutContent() {
     <>
       <StatusBar style={isDark ? 'light' : 'dark'} />
       <Stack />
+      <ToastContainer />
     </>
   );
 }
@@ -34,7 +37,9 @@ export default function RootLayout() {
   return (
     <ThemeProvider>
       <AuthProvider>
-        <RootLayoutContent />
+        <ToastProvider>
+          <RootLayoutContent />
+        </ToastProvider>
       </AuthProvider>
     </ThemeProvider>
   );
