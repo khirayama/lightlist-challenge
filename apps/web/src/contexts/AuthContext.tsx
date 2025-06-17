@@ -21,14 +21,28 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    const token = authService.getToken();
-    const currentUser = authService.getCurrentUser();
-    
-    if (token && currentUser) {
-      setUser(currentUser);
-    }
-    
-    setIsLoading(false);
+    const initializeAuth = async () => {
+      const token = authService.getToken();
+      const currentUser = authService.getCurrentUser();
+      
+      if (token && currentUser) {
+        // トークンの有効性を確認
+        try {
+          // API呼び出しでトークンの有効性を確認
+          await authService.getProfile(currentUser.id);
+          setUser(currentUser);
+        } catch (error) {
+          // トークンが無効の場合は認証状態をクリア
+          authService.removeToken();
+          authService.removeRefreshToken();
+          authService.removeCurrentUser();
+        }
+      }
+      
+      setIsLoading(false);
+    };
+
+    initializeAuth();
   }, []);
 
   const login = async (email: string, password: string): Promise<void> => {

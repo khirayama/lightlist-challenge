@@ -22,6 +22,8 @@ export interface AuthResponse {
 export interface JwtPayload {
   userId: string;
   email: string;
+  exp?: number; // 有効期限のタイムスタンプ
+  iat?: number; // 発行時刻のタイムスタンプ
 }
 
 export interface SettingsUpdateRequest {

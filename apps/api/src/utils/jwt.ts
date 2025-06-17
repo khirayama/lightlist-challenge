@@ -3,7 +3,7 @@ import crypto from "crypto";
 import type { JwtPayload } from "../types/auth.js";
 
 const JWT_SECRET = process.env.JWT_SECRET || "default-secret";
-const ACCESS_TOKEN_EXPIRES_IN = "60m"; // 60分
+const ACCESS_TOKEN_EXPIRES_IN = process.env.JWT_EXPIRES_IN || "1h"; // 環境変数から読み込み
 
 export const generateAccessToken = (payload: JwtPayload): string => {
   return jwt.sign(payload, JWT_SECRET, {
@@ -21,7 +21,24 @@ export const generateToken = (payload: JwtPayload): string => {
 };
 
 export const verifyAccessToken = (token: string): JwtPayload => {
-  return jwt.verify(token, JWT_SECRET) as JwtPayload;
+  try {
+    const decoded = jwt.verify(token, JWT_SECRET) as JwtPayload;
+    
+    // 明示的に有効期限をチェック
+    if (decoded.exp && decoded.exp * 1000 < Date.now()) {
+      throw new Error('Token has expired');
+    }
+    
+    return decoded;
+  } catch (error) {
+    if (error instanceof jwt.TokenExpiredError) {
+      throw new Error('Token has expired');
+    }
+    if (error instanceof jwt.JsonWebTokenError) {
+      throw new Error('Invalid token');
+    }
+    throw error;
+  }
 };
 
 export const verifyToken = (token: string): JwtPayload => {
@@ -38,8 +55,8 @@ export const decodeToken = (token: string): JwtPayload | null => {
 };
 
 export const getRefreshTokenExpiresAt = (): Date => {
-  // 3年後の日付を返す
+  // 1年後の日付を返す
   const now = new Date();
-  now.setFullYear(now.getFullYear() + 3);
+  now.setFullYear(now.getFullYear() + 1);
   return now;
 };

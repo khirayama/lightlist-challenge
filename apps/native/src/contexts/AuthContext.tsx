@@ -25,7 +25,17 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         const currentUser = await authService.getCurrentUser();
         
         if (token && currentUser) {
-          setUser(currentUser);
+          // トークンの有効性を確認
+          try {
+            // API呼び出しでトークンの有効性を確認
+            await authService.getProfile(currentUser.id);
+            setUser(currentUser);
+          } catch (error) {
+            // トークンが無効の場合は認証状態をクリア
+            await authService.removeToken();
+            await authService.removeRefreshToken();
+            await authService.removeCurrentUser();
+          }
         }
       } catch (error) {
         console.error('Error initializing auth:', error);
