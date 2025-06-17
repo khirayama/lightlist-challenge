@@ -10,7 +10,8 @@
     "ios": "expo start --ios",
     "web": "expo start --web",
     "build": "expo export",
-    "check": "tsc --noEmit"
+    "check": "tsc --noEmit",
+    "setup": "[ -f .env ] || cp .env.example .env"
   },
   "dependencies": {
     "@hobby-baseline/styles": "*",

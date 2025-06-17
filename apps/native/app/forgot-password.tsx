@@ -3,6 +3,7 @@ import { View, Text, TextInput, TouchableOpacity, ScrollView, Alert } from 'reac
 import { useRouter } from 'expo-router';
 import { useTranslation } from 'react-i18next';
 import { authStyles } from '../src/styles/auth';
+import { authService } from '../src/lib/auth';
 
 export default function ForgotPasswordScreen() {
   const { t } = useTranslation();
@@ -19,31 +20,20 @@ export default function ForgotPasswordScreen() {
     setIsLoading(true);
 
     try {
-      const response = await fetch(`${process.env.EXPO_PUBLIC_API_URL}/api/auth/request-password-reset`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ email }),
-      });
-
-      if (response.ok) {
-        Alert.alert(
-          t('auth.checkEmail'),
-          t('auth.passwordResetEmailSent'),
-          [
-            {
-              text: 'OK',
-              onPress: () => router.replace('/login'),
-            },
-          ]
-        );
-      } else {
-        const data = await response.json();
-        Alert.alert(t('auth.error'), data.error || t('auth.unknownError'));
-      }
+      await authService.requestPasswordReset(email);
+      Alert.alert(
+        t('auth.checkEmail'),
+        t('auth.passwordResetEmailSent'),
+        [
+          {
+            text: 'OK',
+            onPress: () => router.replace('/login'),
+          },
+        ]
+      );
     } catch (error) {
-      Alert.alert(t('auth.error'), t('auth.networkError'));
+      const errorMessage = error instanceof Error ? error.message : t('auth.unknownError');
+      Alert.alert(t('auth.error'), errorMessage);
     } finally {
       setIsLoading(false);
     }

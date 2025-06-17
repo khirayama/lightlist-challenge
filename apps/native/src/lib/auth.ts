@@ -1,7 +1,7 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { RegisterRequest, LoginRequest, AuthResponse } from './types/auth';
 
-const API_BASE_URL = 'http://localhost:3001';
+const API_BASE_URL = process.env.EXPO_PUBLIC_API_URL || 'http://localhost:3001';
 
 interface Settings {
   id: string;
@@ -202,6 +202,36 @@ export class AuthService {
 
     const result = await response.json();
     return result.data.user;
+  }
+
+  async requestPasswordReset(email: string): Promise<void> {
+    const response = await fetch(`${API_BASE_URL}/api/auth/request-password-reset`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ email }),
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(errorData.error || 'Failed to request password reset');
+    }
+  }
+
+  async resetPassword(token: string, password: string): Promise<void> {
+    const response = await fetch(`${API_BASE_URL}/api/auth/reset-password`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ token, password }),
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(errorData.error || 'Failed to reset password');
+    }
   }
 }
 

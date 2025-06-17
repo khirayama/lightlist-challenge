@@ -93,6 +93,7 @@
    このコマンドは以下を実行します：
    - apps/api: .envファイル作成、PostgreSQL起動、Prismaマイグレーション
    - apps/web: .envファイル作成
+   - apps/native: .envファイル作成
 
 ### 環境変数
 
@@ -110,6 +111,11 @@ API_RATE_LIMIT_WINDOW_MS=900000
 #### apps/web/.env
 ```env
 NEXT_PUBLIC_API_URL=http://localhost:3001
+```
+
+#### apps/native/.env
+```env
+EXPO_PUBLIC_API_URL=http://localhost:3001
 ```
 
 ## 開発

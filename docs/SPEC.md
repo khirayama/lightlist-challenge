@@ -385,6 +385,7 @@ Hobby Baselineは、マルチプラットフォーム対応のアプリケーシ
 - **機能**: AuthContext、APIサービス、ログイン/登録画面、認証状態による画面切り替え
 - **スタイル**: React Native StyleSheetを使用（NativeWindからの移行）
 - **ビルド**: 正常にビルド可能
+- **APIベースURL**: 環境変数（EXPO_PUBLIC_API_URL）による設定
 
 ## データベーススキーマ
 
@@ -417,6 +418,7 @@ model User {
 - Web認証機能（認証Context、画面実装）
 - Native認証機能（認証Context、ログイン/登録画面、認証状態による画面切り替え）
 - **プロフィール編集機能**（API、Web、Native全てで名前編集機能を実装）
+- **APIベースURL設定の統一**（Native環境変数対応とAuthService統合）
 
 ### 🚧 問題・課題
 - ~~**NativeWindビルドエラー**: PostCSSの非同期プラグイン問題により、Nativeアプリのビルドが失敗~~ ✅ **解決済み**
