@@ -27,3 +27,16 @@ export interface SettingsUpdateRequest {
   theme?: "system" | "light" | "dark";
   language?: "ja" | "en";
 }
+
+export interface RequestPasswordResetRequest {
+  email: string;
+}
+
+export interface ResetPasswordRequest {
+  token: string;
+  password: string;
+}
+
+export interface PasswordResetResponse {
+  message: string;
+}

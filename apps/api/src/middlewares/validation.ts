@@ -41,6 +41,25 @@ export const userIdParamSchema = z.object({
   }),
 });
 
+export const requestPasswordResetSchema = z.object({
+  body: z.object({
+    email: z.string().email("Invalid email format"),
+  }),
+});
+
+export const resetPasswordSchema = z.object({
+  body: z.object({
+    token: z.string().min(1, "Token is required"),
+    password: z
+      .string()
+      .min(8, "Password must be at least 8 characters")
+      .regex(
+        /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/,
+        "Password must contain at least one lowercase letter, one uppercase letter, and one number",
+      ),
+  }),
+});
+
 type ValidationSchema = z.ZodSchema<{
   body?: unknown;
   params?: unknown;

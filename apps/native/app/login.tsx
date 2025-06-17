@@ -63,9 +63,14 @@ export default function LoginPage() {
               </View>
 
               <View style={styles.field}>
-                <Text style={[styles.label, isDark ? styles.labelDark : styles.labelLight]}>
-                  {t('auth.password')} <Text style={styles.required}>*</Text>
-                </Text>
+                <View style={styles.labelRow}>
+                  <Text style={[styles.label, isDark ? styles.labelDark : styles.labelLight]}>
+                    {t('auth.password')} <Text style={styles.required}>*</Text>
+                  </Text>
+                  <TouchableOpacity onPress={() => router.push('/forgot-password')}>
+                    <Text style={styles.link}>{t('auth.forgotPassword')}</Text>
+                  </TouchableOpacity>
+                </View>
                 <TextInput
                   value={formData.password}
                   onChangeText={(value) => handleChange('password', value)}
@@ -159,6 +164,11 @@ const styles = StyleSheet.create({
   },
   field: {
     gap: 4,
+  },
+  labelRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
   },
   label: {
     fontSize: 14,
