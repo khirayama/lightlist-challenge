@@ -1,0 +1,8 @@
+{
+  "permissions": {
+    "allow": [
+      "WebFetch(domain:docs.yjs.dev)"
+    ],
+    "deny": []
+  }
+}
