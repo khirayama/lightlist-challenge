@@ -99,7 +99,7 @@
 
 #### apps/api/.env
 ```env
-DATABASE_URL="postgresql://hobby_user:hobby_password@localhost:5432/hobby_db?schema=public"
+DATABASE_URL="postgresql://lightlist_user:lightlist_password@localhost:5432/lightlist_db?schema=public"
 PORT=3001
 NODE_ENV=development
 JWT_SECRET=your-secret-key-here
@@ -136,13 +136,13 @@ npm run dev
 
 ```bash
 # APIサーバーのみ
-npm run dev --filter=@hobby-baseline/api
+npm run dev --filter=@lightlist/api
 
 # Webアプリのみ
-npm run dev --filter=@hobby-baseline/web
+npm run dev --filter=@lightlist/web
 
 # モバイルアプリのみ
-npm run dev --filter=@hobby-baseline/native
+npm run dev --filter=@lightlist/native
 ```
 
 ### その他のコマンド

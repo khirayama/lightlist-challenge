@@ -1,11 +1,11 @@
 {
   "app": {
-    "title": "Hobby Baseline",
+    "title": "Lightlist",
     "description": "A multi-platform application"
   },
   "home": {
     "title": "Hello World",
-    "subtitle": "Welcome to Hobby Baseline Application",
+    "subtitle": "Welcome to Lightlist Application",
     "goToSettings": "Go to Settings"
   },
   "settings": {

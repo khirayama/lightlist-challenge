@@ -3,8 +3,8 @@ import './globals.css'
 import { Providers } from '@/components/providers/Providers'
 
 export const metadata: Metadata = {
-  title: 'Hobby Baseline',
-  description: 'A multi-platform application',
+  title: 'Lightlist',
+  description: 'A multi-platform list application',
 }
 
 export default function RootLayout({

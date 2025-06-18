@@ -1,6 +1,6 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  transpilePackages: ['@hobby-baseline/styles'],
+  transpilePackages: ['@lightlist/styles'],
   experimental: {
     turbo: {
       rules: {},

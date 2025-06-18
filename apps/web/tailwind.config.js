@@ -1,4 +1,4 @@
-const baseConfig = require('@hobby-baseline/styles/tailwind.config.js');
+const baseConfig = require('@lightlist/styles/tailwind.config.js');
 
 /** @type {import('tailwindcss').Config} */
 module.exports = {

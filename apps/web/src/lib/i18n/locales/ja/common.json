@@ -1,11 +1,11 @@
 {
   "app": {
-    "title": "Hobby Baseline",
+    "title": "Lightlist",
     "description": "マルチプラットフォーム対応のアプリケーション"
   },
   "home": {
     "title": "Hello World",
-    "subtitle": "Hobby Baseline アプリケーションへようこそ",
+    "subtitle": "Lightlist アプリケーションへようこそ",
     "goToSettings": "設定ページへ"
   },
   "settings": {

@@ -1,5 +1,5 @@
 {
-  "name": "@hobby-baseline/native",
+  "name": "@lightlist/native",
   "version": "1.0.0",
   "private": true,
   "main": "expo-router/entry",
@@ -14,7 +14,7 @@
     "setup": "[ -f .env ] || cp .env.example .env"
   },
   "dependencies": {
-    "@hobby-baseline/styles": "*",
+    "@lightlist/styles": "*",
     "@react-native-async-storage/async-storage": "^2.1.0",
     "expo": "~52.0.0",
     "expo-localization": "~16.0.0",

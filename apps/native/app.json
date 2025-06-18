@@ -1,7 +1,7 @@
 {
   "expo": {
-    "name": "Hobby Baseline",
-    "slug": "hobby-baseline",
+    "name": "Lightlist",
+    "slug": "lightlist",
     "version": "1.0.0",
     "orientation": "portrait",
     "userInterfaceStyle": "automatic",
@@ -17,7 +17,7 @@
         "backgroundColor": "#ffffff"
       }
     },
-    "scheme": "hobby-baseline",
+    "scheme": "lightlist",
     "plugins": [
       [
         "expo-router",

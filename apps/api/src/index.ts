@@ -29,7 +29,7 @@ app.get("/health", (_req, res) => {
 });
 
 app.get("/api/hello", (_req, res) => {
-  res.json({ message: "Hello from Hobby Baseline API!" });
+  res.json({ message: "Hello from Lightlist API!" });
 });
 
 app.use("/api/auth", authRoutes);
