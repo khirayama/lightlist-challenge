@@ -43,12 +43,6 @@ export const generateToken = (payload: JwtPayload): string => {
 export const verifyAccessToken = (token: string): JwtPayload => {
   try {
     const decoded = jwt.verify(token, JWT_SECRET) as JwtPayload;
-    
-    // 明示的に有効期限をチェック
-    if (decoded.exp && decoded.exp * 1000 < Date.now()) {
-      throw new Error('Token has expired');
-    }
-    
     return decoded;
   } catch (error) {
     if (error instanceof jwt.TokenExpiredError) {

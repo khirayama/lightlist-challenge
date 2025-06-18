@@ -38,7 +38,22 @@ export const authenticateToken = async (
 
     req.user = user;
     next();
-  } catch (_error) {
+  } catch (error) {
+    // エラーの詳細を確認してステータスコードを決定
+    if (error instanceof Error) {
+      if (error.message === 'Token has expired') {
+        // 期限切れトークンの場合は401を返す（クライアント側でリフレッシュ可能）
+        res.status(401).json({ error: "Token has expired" });
+        return;
+      }
+      if (error.message === 'Invalid token') {
+        // 無効なトークンの場合は403を返す
+        res.status(403).json({ error: "Invalid token" });
+        return;
+      }
+    }
+    
+    // その他のエラーは403として扱う
     res.status(403).json({ error: "Invalid or expired token" });
   }
 };

@@ -52,8 +52,9 @@ export class AuthService {
 
     let response = await makeRequest(token);
 
-    // アクセストークンが期限切れの場合、リフレッシュを試行
-    if (response.status === 401) {
+    // アクセストークンが期限切れまたは無効の場合、リフレッシュを試行
+    if (response.status === 401 || response.status === 403) {
+      console.log(`[AuthService] Token expired or invalid (${response.status}), attempting refresh...`);
       try {
         const refreshResult = await this.getOrCreateRefreshPromise();
         await this.setToken(refreshResult.token);
@@ -61,9 +62,11 @@ export class AuthService {
         await this.setTokenExpiresAt(refreshResult.expiresAt);
         this.scheduleProactiveRefresh(refreshResult.expiresAt);
         
+        console.log('[AuthService] Token refresh successful, retrying request...');
         // 新しいトークンで再リクエスト
         response = await makeRequest(refreshResult.token);
       } catch (error) {
+        console.error('[AuthService] Token refresh failed:', error);
         // リフレッシュ失敗時は認証状態をクリア
         await this.removeToken();
         await this.removeRefreshToken();
@@ -92,7 +95,7 @@ export class AuthService {
     }
   }
 
-  private scheduleProactiveRefresh(expiresAt: number): void {
+  public scheduleProactiveRefresh(expiresAt: number): void {
     this.clearRefreshTimeout();
     
     const now = Math.floor(Date.now() / 1000);

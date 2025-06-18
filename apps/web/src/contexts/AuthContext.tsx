@@ -35,7 +35,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           // プロアクティブリフレッシュを開始
           const expiresAt = authService.getTokenExpiresAt();
           if (expiresAt) {
-            (authService as any).scheduleProactiveRefresh(expiresAt);
+            authService.scheduleProactiveRefresh(expiresAt);
           }
         } catch (error) {
           // トークンが無効の場合は認証状態をクリア
