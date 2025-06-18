@@ -14,7 +14,10 @@ export class AuthController {
   async register(req: Request, res: Response): Promise<void> {
     try {
       const data: RegisterRequest = req.body;
-      const result = await authService.register(data);
+      const userAgent = req.get('User-Agent') || '';
+      const ipAddress = req.ip || req.connection.remoteAddress || '';
+      
+      const result = await authService.register(data, userAgent, ipAddress);
 
       res.status(201).json({
         message: "User registered successfully",
@@ -36,7 +39,10 @@ export class AuthController {
   async login(req: Request, res: Response): Promise<void> {
     try {
       const data: LoginRequest = req.body;
-      const result = await authService.login(data);
+      const userAgent = req.get('User-Agent') || '';
+      const ipAddress = req.ip || req.connection.remoteAddress || '';
+      
+      const result = await authService.login(data, userAgent, ipAddress);
 
       res.status(200).json({
         message: "Login successful",

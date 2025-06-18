@@ -17,11 +17,12 @@ import {
   getRefreshTokenExpiresAt,
   getAccessTokenExpiresAt 
 } from "../utils/jwt.js";
+import { generateDeviceInfoFromRequest } from "../utils/device.js";
 
 const prisma = new PrismaClient();
 
 export class AuthService {
-  async register(data: RegisterRequest): Promise<AuthResponse> {
+  async register(data: RegisterRequest, userAgent: string, ipAddress: string): Promise<AuthResponse> {
     const { email, password, name } = data;
 
     const existingUser = await prisma.user.findUnique({
@@ -62,16 +63,16 @@ export class AuthService {
     const refreshToken = generateRefreshToken();
     const refreshTokenExpiresAt = getRefreshTokenExpiresAt();
 
-    // デバイス情報を取得
-    const { deviceId, deviceName } = data;
+    // デバイス情報をサーバーサイドで生成
+    const { deviceId, deviceName } = generateDeviceInfoFromRequest(userAgent, ipAddress);
 
     // リフレッシュトークンをデータベースに保存
     await prisma.refreshToken.create({
       data: {
         userId: user.id,
         token: refreshToken,
-        deviceId: deviceId || `new-device-${Date.now()}`,
-        deviceName: deviceName || 'New Device',
+        deviceId,
+        deviceName,
         expiresAt: refreshTokenExpiresAt,
       },
     });
@@ -84,7 +85,7 @@ export class AuthService {
     };
   }
 
-  async login(data: LoginRequest): Promise<AuthResponse> {
+  async login(data: LoginRequest, userAgent: string, ipAddress: string): Promise<AuthResponse> {
     const { email, password } = data;
 
     const user = await prisma.user.findUnique({
@@ -116,25 +117,23 @@ export class AuthService {
     const refreshToken = generateRefreshToken();
     const refreshTokenExpiresAt = getRefreshTokenExpiresAt();
 
-    // デバイス情報を取得（クライアントから送信される）
-    const { deviceId, deviceName } = data;
+    // デバイス情報をサーバーサイドで生成
+    const { deviceId, deviceName } = generateDeviceInfoFromRequest(userAgent, ipAddress);
 
     // 同一デバイスの既存リフレッシュトークンのみ無効化
-    if (deviceId) {
-      await prisma.refreshToken.updateMany({
-        where: {
-          userId: user.id,
-          deviceId: deviceId,
-          used: false,
-          expiresAt: {
-            gt: new Date(),
-          },
+    await prisma.refreshToken.updateMany({
+      where: {
+        userId: user.id,
+        deviceId: deviceId,
+        used: false,
+        expiresAt: {
+          gt: new Date(),
         },
-        data: {
-          used: true,
-        },
-      });
-    }
+      },
+      data: {
+        used: true,
+      },
+    });
 
     // デバイス数制限チェック（最大5台）
     const activeTokenCount = await prisma.refreshToken.count({
@@ -182,8 +181,8 @@ export class AuthService {
       data: {
         userId: user.id,
         token: refreshToken,
-        deviceId: deviceId || `unknown-device-${Date.now()}`,
-        deviceName: deviceName || 'Unknown Device',
+        deviceId,
+        deviceName,
         expiresAt: refreshTokenExpiresAt,
       },
     });

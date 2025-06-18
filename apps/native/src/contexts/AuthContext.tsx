@@ -1,7 +1,6 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import { User } from '../lib/types/auth';
 import { authService } from '../lib/auth';
-import { getDeviceInfo } from '../lib/device';
 
 interface AuthContextType {
   user: User | null;
@@ -58,12 +57,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const login = async (email: string, password: string): Promise<void> => {
     setIsLoading(true);
     try {
-      const deviceInfo = await getDeviceInfo();
       const response = await authService.login({ 
         email, 
-        password, 
-        deviceId: deviceInfo.deviceId, 
-        deviceName: deviceInfo.deviceName 
+        password
       });
       await authService.setToken(response.token);
       await authService.setRefreshToken(response.refreshToken);
@@ -77,12 +73,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const register = async (email: string, password: string): Promise<void> => {
     setIsLoading(true);
     try {
-      const deviceInfo = await getDeviceInfo();
       const response = await authService.register({ 
         email, 
-        password, 
-        deviceId: deviceInfo.deviceId, 
-        deviceName: deviceInfo.deviceName 
+        password
       });
       await authService.setToken(response.token);
       await authService.setRefreshToken(response.refreshToken);

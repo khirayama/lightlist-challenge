@@ -1,15 +1,11 @@
 export interface RegisterRequest {
   email: string;
   password: string;
-  deviceId?: string;
-  deviceName?: string;
 }
 
 export interface LoginRequest {
   email: string;
   password: string;
-  deviceId?: string;
-  deviceName?: string;
 }
 
 export interface AuthResponse {
