@@ -91,7 +91,7 @@
    npm run setup
    ```
    このコマンドは以下を実行します：
-   - apps/api: .envファイル作成、PostgreSQL起動、Prismaマイグレーション
+   - apps/api: .envファイル作成、PostgreSQL起動、Prismaクライアント生成、データベーススキーマ適用
    - apps/web: .envファイル作成
    - apps/native: .envファイル作成
 
