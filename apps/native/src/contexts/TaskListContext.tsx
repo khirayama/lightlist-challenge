@@ -16,6 +16,7 @@ interface TaskListContextType {
   
   // Task operations
   createTask: (content: string) => Promise<void>;
+  updateTask: (taskId: string, updates: Partial<UpdateTaskRequest>) => Promise<void>;
   toggleTask: (taskId: string) => Promise<void>;
   deleteTask: (taskId: string) => Promise<void>;
 }
@@ -112,6 +113,19 @@ export const TaskListProvider: React.FC<TaskListProviderProps> = ({ children }) 
     }
   };
 
+  const updateTask = async (taskId: string, updates: Partial<UpdateTaskRequest>) => {
+    try {
+      setError(null);
+      const updatedTask = await taskListService.updateTask(taskId, updates);
+      
+      setCurrentTasks(prev => prev.map(t => 
+        t.id === taskId ? updatedTask : t
+      ));
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to update task');
+    }
+  };
+
   const toggleTask = async (taskId: string) => {
     try {
       setError(null);
@@ -189,6 +203,7 @@ export const TaskListProvider: React.FC<TaskListProviderProps> = ({ children }) 
     createTaskList,
     selectTaskList,
     createTask,
+    updateTask,
     toggleTask,
     deleteTask,
   };

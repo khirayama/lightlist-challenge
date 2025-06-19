@@ -243,10 +243,12 @@ const Sidebar: React.FC = () => {
 
 // メインコンテンツコンポーネント
 const MainContent: React.FC = () => {
-  const { currentTasks, currentTaskListId, taskLists, createTask, toggleTask, deleteTask, error } = useTaskList();
+  const { currentTasks, currentTaskListId, taskLists, createTask, toggleTask, updateTask, deleteTask, error } = useTaskList();
   const { resolvedTheme } = useTheme();
   const { t } = useTranslation();
   const [newTaskContent, setNewTaskContent] = useState('');
+  const [editingTaskId, setEditingTaskId] = useState<string | null>(null);
+  const [editingContent, setEditingContent] = useState('');
 
   const isDark = resolvedTheme === 'dark';
   const currentTaskList = taskLists.find(list => list.id === currentTaskListId);
@@ -256,6 +258,31 @@ const MainContent: React.FC = () => {
     
     await createTask(newTaskContent.trim());
     setNewTaskContent('');
+  };
+
+  const handleStartEdit = (task: any) => {
+    setEditingTaskId(task.id);
+    setEditingContent(task.content);
+  };
+
+  const handleSaveEdit = async () => {
+    if (!editingTaskId || !editingContent.trim()) {
+      handleCancelEdit();
+      return;
+    }
+
+    try {
+      await updateTask(editingTaskId, { content: editingContent.trim() });
+      setEditingTaskId(null);
+      setEditingContent('');
+    } catch (error) {
+      console.error('Failed to update task:', error);
+    }
+  };
+
+  const handleCancelEdit = () => {
+    setEditingTaskId(null);
+    setEditingContent('');
   };
 
   if (!currentTaskListId) {
@@ -337,14 +364,30 @@ const MainContent: React.FC = () => {
                   )}
                 </View>
               </TouchableOpacity>
-              <Text style={[
-                styles.taskContent,
-                task.completed && styles.taskContentCompleted,
-                isDark ? styles.textWhite : styles.textBlack,
-                task.completed && (isDark ? styles.textGray400 : styles.textGray500),
-              ]}>
-                {task.content}
-              </Text>
+              {editingTaskId === task.id ? (
+                <TextInput
+                  value={editingContent}
+                  onChangeText={setEditingContent}
+                  style={[
+                    styles.taskEditInput,
+                    isDark ? styles.taskEditInputDark : styles.taskEditInputLight,
+                  ]}
+                  onBlur={handleSaveEdit}
+                  onSubmitEditing={handleSaveEdit}
+                  autoFocus
+                />
+              ) : (
+                <TouchableOpacity onLongPress={() => handleStartEdit(task)} style={styles.taskContentContainer}>
+                  <Text style={[
+                    styles.taskContent,
+                    task.completed && styles.taskContentCompleted,
+                    isDark ? styles.textWhite : styles.textBlack,
+                    task.completed && (isDark ? styles.textGray400 : styles.textGray500),
+                  ]}>
+                    {task.content}
+                  </Text>
+                </TouchableOpacity>
+              )}
               {task.dueDate && (
                 <Text style={[styles.taskDueDate, isDark ? styles.textGray400 : styles.textGray500]}>
                   {new Date(task.dueDate).toLocaleDateString()}
@@ -746,12 +789,32 @@ const styles = StyleSheet.create({
     fontSize: 12,
     fontWeight: 'bold',
   },
-  taskContent: {
+  taskContentContainer: {
     flex: 1,
+  },
+  taskContent: {
     fontSize: 16,
   },
   taskContentCompleted: {
     textDecorationLine: 'line-through',
+  },
+  taskEditInput: {
+    flex: 1,
+    fontSize: 16,
+    borderWidth: 1,
+    borderRadius: 4,
+    paddingVertical: 4,
+    paddingHorizontal: 8,
+  },
+  taskEditInputLight: {
+    backgroundColor: '#FFFFFF',
+    borderColor: '#3B82F6',
+    color: '#111827',
+  },
+  taskEditInputDark: {
+    backgroundColor: '#1F2937',
+    borderColor: '#3B82F6',
+    color: '#FFFFFF',
   },
   taskDueDate: {
     fontSize: 12,
