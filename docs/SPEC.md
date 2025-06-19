@@ -179,7 +179,9 @@ Hobby Baselineは、マルチプラットフォーム対応のアプリケーシ
 ```json
 {
   "email": "user@example.com",
-  "password": "TestPass123"
+  "password": "TestPass123",
+  "deviceId": "browser-abc123...",
+  "deviceName": "Chrome on macOS"
 }
 ```
 
@@ -212,7 +214,9 @@ Hobby Baselineは、マルチプラットフォーム対応のアプリケーシ
 ```json
 {
   "email": "user@example.com",
-  "password": "TestPass123"
+  "password": "TestPass123",
+  "deviceId": "browser-abc123...",
+  "deviceName": "Chrome on macOS"
 }
 ```
 
@@ -312,6 +316,9 @@ Hobby Baselineは、マルチプラットフォーム対応のアプリケーシ
 - **プロアクティブトークン更新**: 期限の5分前に自動リフレッシュ実行
 - **リアクティブトークン更新**: 401エラー時に自動でリフレッシュ実行
 - **同時リクエスト制御**: 重複リフレッシュ防止メカニズム実装
+- **🆕 デバイス別セッション管理**: デバイスごとのリフレッシュトークン管理
+- **🆕 複数端末対応**: 最大5台のデバイスで同時ログイン可能
+- **🆕 デバイス識別**: ブラウザフィンガープリント・ネイティブデバイスIDによる識別
 - **CORS**: 有効
 - **Helmet**: セキュリティヘッダー設定済み
 

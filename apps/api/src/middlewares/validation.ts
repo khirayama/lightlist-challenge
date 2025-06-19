@@ -12,6 +12,8 @@ export const registerSchema = z.object({
         "Password must contain at least one lowercase letter, one uppercase letter, and one number",
       ),
     name: z.string().optional(),
+    deviceId: z.string().optional(),
+    deviceName: z.string().optional(),
   }),
 });
 
@@ -19,6 +21,8 @@ export const loginSchema = z.object({
   body: z.object({
     email: z.string().email("Invalid email format"),
     password: z.string().min(1, "Password is required"),
+    deviceId: z.string().optional(),
+    deviceName: z.string().optional(),
   }),
 });
 

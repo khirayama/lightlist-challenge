@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import { User } from '../lib/types/auth';
 import { authService } from '../lib/auth';
+import { getDeviceInfo } from '../lib/device';
 
 interface AuthContextType {
   user: User | null;
@@ -57,7 +58,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const login = async (email: string, password: string): Promise<void> => {
     setIsLoading(true);
     try {
-      const response = await authService.login({ email, password });
+      const deviceInfo = await getDeviceInfo();
+      const response = await authService.login({ 
+        email, 
+        password, 
+        deviceId: deviceInfo.deviceId, 
+        deviceName: deviceInfo.deviceName 
+      });
       await authService.setToken(response.token);
       await authService.setRefreshToken(response.refreshToken);
       await authService.setCurrentUser(response.user);
@@ -70,7 +77,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const register = async (email: string, password: string): Promise<void> => {
     setIsLoading(true);
     try {
-      const response = await authService.register({ email, password });
+      const deviceInfo = await getDeviceInfo();
+      const response = await authService.register({ 
+        email, 
+        password, 
+        deviceId: deviceInfo.deviceId, 
+        deviceName: deviceInfo.deviceName 
+      });
       await authService.setToken(response.token);
       await authService.setRefreshToken(response.refreshToken);
       await authService.setCurrentUser(response.user);
