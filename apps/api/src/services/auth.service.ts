@@ -40,10 +40,12 @@ export class AuthService {
         email,
         password: hashedPassword,
         name: name || null,
-        settings: {
+        userSettings: {
           create: {
             theme: "system",
             language: "ja",
+            taskInsertPosition: "top",
+            autoSort: false,
           },
         },
       },

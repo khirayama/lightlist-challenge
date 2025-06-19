@@ -53,12 +53,14 @@ export class UserService {
 
   // 設定管理メソッド
   async getSettings(userId: string) {
-    const settings = await prisma.settings.findUnique({
+    const settings = await prisma.userSettings.findUnique({
       where: { userId },
       select: {
         id: true,
         theme: true,
         language: true,
+        taskInsertPosition: true,
+        autoSort: true,
         createdAt: true,
         updatedAt: true,
       },
@@ -72,21 +74,27 @@ export class UserService {
   }
 
   async updateSettings(userId: string, data: SettingsUpdateRequest) {
-    const settings = await prisma.settings.upsert({
+    const settings = await prisma.userSettings.upsert({
       where: { userId },
       update: {
         theme: data.theme,
         language: data.language,
+        taskInsertPosition: data.taskInsertPosition,
+        autoSort: data.autoSort,
       },
       create: {
         userId,
         theme: data.theme || "system",
         language: data.language || "ja",
+        taskInsertPosition: data.taskInsertPosition || "top",
+        autoSort: data.autoSort || false,
       },
       select: {
         id: true,
         theme: true,
         language: true,
+        taskInsertPosition: true,
+        autoSort: true,
         createdAt: true,
         updatedAt: true,
       },

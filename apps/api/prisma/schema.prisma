@@ -12,43 +12,122 @@ model User {
   email               String               @unique
   name                String?
   password            String
-  settings            Settings?
-  passwordResetTokens PasswordResetToken[]
-  refreshTokens       RefreshToken[]
   createdAt           DateTime             @default(now())
   updatedAt           DateTime             @updatedAt
+  passwordResetTokens PasswordResetToken[]
+  refreshTokens       RefreshToken[]
+  sharedTaskLists     SharedTaskList[]
+  taskLists           TaskList[]
+  taskListUpdates     TaskListUpdate[]
+  userSettings        UserSettings?
 }
 
-model Settings {
-  id       String   @id @default(cuid())
-  userId   String   @unique
-  user     User     @relation(fields: [userId], references: [id])
-  theme    String   @default("system")
-  language String   @default("ja")
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+model UserSettings {
+  id                 String   @id @default(cuid())
+  userId             String   @unique
+  theme              String   @default("system")
+  language           String   @default("ja")
+  taskInsertPosition String   @default("top")
+  autoSort           Boolean  @default(false)
+  createdAt          DateTime @default(now())
+  updatedAt          DateTime @updatedAt
+  user               User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
 
 model PasswordResetToken {
   id        String   @id @default(cuid())
   userId    String
-  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   token     String   @unique
   expiresAt DateTime
   used      Boolean  @default(false)
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
 
 model RefreshToken {
   id         String   @id @default(cuid())
   userId     String
-  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   token      String   @unique
-  deviceId   String?  // デバイス識別子（ブラウザのfingerprint、アプリのdeviceId等）
-  deviceName String?  // ユーザー可読なデバイス名（"iPhone 13", "Chrome on MacBook"等）
   expiresAt  DateTime
   used       Boolean  @default(false)
   createdAt  DateTime @default(now())
   updatedAt  DateTime @updatedAt
+  deviceId   String?
+  deviceName String?
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model TaskList {
+  id        String             @id @default(cuid())
+  name      String
+  userId    String
+  order     Int                @default(0)
+  color     String?            @default("#FFFFFF")
+  createdAt DateTime           @default(now())
+  updatedAt DateTime           @updatedAt
+  shares    SharedTaskList[]
+  tasks     Task[]
+  document  TaskListDocument?
+  updates   TaskListUpdate[]
+  user      User               @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+}
+
+model Task {
+  id         String    @id @default(cuid())
+  content    String
+  completed  Boolean   @default(false)
+  dueDate    DateTime?
+  order      Int       @default(0)
+  taskListId String
+  createdAt  DateTime  @default(now())
+  updatedAt  DateTime  @updatedAt
+  taskList   TaskList  @relation(fields: [taskListId], references: [id], onDelete: Cascade)
+
+  @@index([taskListId])
+}
+
+model SharedTaskList {
+  id         String   @id @default(cuid())
+  taskListId String
+  userId     String?
+  shareToken String   @unique
+  permission String   @default("view")
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+  taskList   TaskList @relation(fields: [taskListId], references: [id], onDelete: Cascade)
+  user       User?    @relation(fields: [userId], references: [id])
+
+  @@index([taskListId])
+  @@index([userId])
+  @@index([shareToken])
+}
+
+model TaskListDocument {
+  id            String   @id @default(cuid())
+  taskListId    String   @unique
+  stateVector   Bytes
+  documentState Bytes
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  taskList TaskList @relation(fields: [taskListId], references: [id], onDelete: Cascade)
+
+  @@index([taskListId])
+}
+
+model TaskListUpdate {
+  id         String   @id @default(cuid())
+  taskListId String
+  update     Bytes
+  userId     String?
+  createdAt  DateTime @default(now())
+
+  taskList TaskList @relation(fields: [taskListId], references: [id], onDelete: Cascade)
+  user     User?    @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  @@index([taskListId])
+  @@index([createdAt])
 }

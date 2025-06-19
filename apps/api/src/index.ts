@@ -5,6 +5,8 @@ import rateLimit from "express-rate-limit";
 import helmet from "helmet";
 import authRoutes from "./routes/auth.js";
 import usersRoutes from "./routes/users.js";
+import taskListRoutes from "./routes/task-lists.js";
+import taskRoutes from "./routes/tasks.js";
 
 dotenv.config();
 
@@ -34,6 +36,8 @@ app.get("/api/hello", (_req, res) => {
 
 app.use("/api/auth", authRoutes);
 app.use("/api/users", usersRoutes);
+app.use("/api/task-lists", taskListRoutes);
+app.use("/api", taskRoutes);
 
 app.listen(PORT, '0.0.0.0', () => {
   console.log(`API server is running on http://0.0.0.0:${PORT}`);

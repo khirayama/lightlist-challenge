@@ -30,6 +30,8 @@ export interface JwtPayload {
 export interface SettingsUpdateRequest {
   theme?: "system" | "light" | "dark";
   language?: "ja" | "en";
+  taskInsertPosition?: "top" | "bottom";
+  autoSort?: boolean;
 }
 
 export interface RequestPasswordResetRequest {
