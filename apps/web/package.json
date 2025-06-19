@@ -11,6 +11,9 @@
     "setup": "[ -f .env ] || cp .env.example .env"
   },
   "dependencies": {
+    "@dnd-kit/core": "^6.3.1",
+    "@dnd-kit/sortable": "^10.0.0",
+    "@dnd-kit/utilities": "^3.2.2",
     "@lightlist/sdk": "*",
     "i18next": "^23.7.0",
     "i18next-browser-languagedetector": "^7.2.0",

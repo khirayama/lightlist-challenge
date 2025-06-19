@@ -6,6 +6,8 @@ interface Settings {
   id: string;
   theme: 'system' | 'light' | 'dark';
   language: 'ja' | 'en';
+  taskInsertPosition: 'top' | 'bottom';
+  autoSort: boolean;
   createdAt: string;
   updatedAt: string;
 }
@@ -13,6 +15,8 @@ interface Settings {
 interface SettingsUpdateRequest {
   theme?: 'system' | 'light' | 'dark';
   language?: 'ja' | 'en';
+  taskInsertPosition?: 'top' | 'bottom';
+  autoSort?: boolean;
 }
 
 interface ProfileUpdateRequest {

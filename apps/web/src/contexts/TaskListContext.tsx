@@ -5,6 +5,8 @@ import { TaskList, Task, CreateTaskListRequest, CreateTaskRequest, UpdateTaskLis
 import { taskListService } from '@/lib/task-list';
 import { parseTaskContent } from '@/lib/utils/dateParser';
 import { useTranslation } from 'react-i18next';
+import { useAuth } from '@/contexts/AuthContext';
+import { authService } from '@/lib/auth';
 
 interface TaskListContextType {
   taskLists: TaskList[];
@@ -26,6 +28,7 @@ interface TaskListContextType {
   toggleTask: (taskId: string) => Promise<void>;
   deleteTask: (taskId: string) => Promise<void>;
   sortTasks: () => void;
+  reorderTasks: (taskIds: string[]) => Promise<void>;
   deleteCompletedTasks: () => Promise<void>;
 }
 
@@ -45,11 +48,25 @@ interface TaskListProviderProps {
 
 export const TaskListProvider: React.FC<TaskListProviderProps> = ({ children }) => {
   const { i18n } = useTranslation();
+  const { user } = useAuth();
   const [taskLists, setTaskLists] = useState<TaskList[]>([]);
   const [currentTaskListId, setCurrentTaskListId] = useState<string | null>(null);
   const [currentTasks, setCurrentTasks] = useState<Task[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [autoSort, setAutoSort] = useState(false);
+
+  // 設定を取得する関数
+  const fetchSettings = async () => {
+    if (!user) return;
+    
+    try {
+      const response = await authService.getSettings(user.id);
+      setAutoSort(response.settings.autoSort || false);
+    } catch (err) {
+      console.error('Failed to fetch settings:', err);
+    }
+  };
 
   const fetchTaskLists = async () => {
     try {
@@ -89,7 +106,7 @@ export const TaskListProvider: React.FC<TaskListProviderProps> = ({ children }) 
       setError(null);
       setCurrentTaskListId(taskListId);
       const tasks = await taskListService.getTasks(taskListId);
-      setCurrentTasks(tasks);
+      setCurrentTasks(applySorting(tasks));
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to fetch tasks');
     } finally {
@@ -114,7 +131,7 @@ export const TaskListProvider: React.FC<TaskListProviderProps> = ({ children }) 
       }
       
       const newTask = await taskListService.createTask(currentTaskListId, taskRequest);
-      setCurrentTasks(prev => [newTask, ...prev]);
+      setCurrentTasks(prev => applySorting([newTask, ...prev]));
       
       // タスクリストのタスク数を更新
       setTaskLists(prev => prev.map(list => 
@@ -142,9 +159,9 @@ export const TaskListProvider: React.FC<TaskListProviderProps> = ({ children }) 
       
       const updatedTask = await taskListService.updateTask(taskId, updateRequest);
       
-      setCurrentTasks(prev => prev.map(t => 
+      setCurrentTasks(prev => applySorting(prev.map(t => 
         t.id === taskId ? updatedTask : t
-      ));
+      )));
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to update task');
       throw err; // 呼び出し元でエラーハンドリングできるように
@@ -161,9 +178,9 @@ export const TaskListProvider: React.FC<TaskListProviderProps> = ({ children }) 
         completed: !task.completed 
       });
       
-      setCurrentTasks(prev => prev.map(t => 
+      setCurrentTasks(prev => applySorting(prev.map(t => 
         t.id === taskId ? updatedTask : t
-      ));
+      )));
       
       // タスクリストの完了数を更新
       setTaskLists(prev => prev.map(list => 
@@ -247,32 +264,76 @@ export const TaskListProvider: React.FC<TaskListProviderProps> = ({ children }) 
     }
   };
 
-  const sortTasks = () => {
-    setCurrentTasks(prev => {
-      const sorted = [...prev].sort((a, b) => {
-        // 1. 完了・未完了で分類（未完了を上に）
-        if (a.completed !== b.completed) {
-          return a.completed ? 1 : -1;
-        }
-        
-        // 2. 日付有無で分類（日付ありを上に）
-        const aHasDate = !!a.dueDate;
-        const bHasDate = !!b.dueDate;
-        if (aHasDate !== bHasDate) {
-          return bHasDate ? 1 : -1;
-        }
-        
-        // 3. 日付がある場合は日付順（早い順）
-        if (aHasDate && bHasDate) {
-          return new Date(a.dueDate!).getTime() - new Date(b.dueDate!).getTime();
-        }
-        
-        // 4. 作成日時順（新しい順）
-        return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
-      });
+  // 高度なソート関数：完了・未完了、日付で自動ソート、それ以外は手動順序を維持
+  const smartSortTasks = (tasks: Task[]): Task[] => {
+    return [...tasks].sort((a, b) => {
+      // 1. 完了・未完了で分類（未完了を上に）
+      if (a.completed !== b.completed) {
+        return a.completed ? 1 : -1;
+      }
       
-      return sorted;
+      // 2. 日付有無で分類（日付ありを上に）
+      const aHasDate = !!a.dueDate;
+      const bHasDate = !!b.dueDate;
+      if (aHasDate !== bHasDate) {
+        return bHasDate ? 1 : -1;
+      }
+      
+      // 3. 日付がある場合は日付順（早い順）
+      if (aHasDate && bHasDate) {
+        return new Date(a.dueDate!).getTime() - new Date(b.dueDate!).getTime();
+      }
+      
+      // 4. 同じカテゴリ内では手動の並び順（order属性）を維持
+      return a.order - b.order;
     });
+  };
+
+  // 通常のソート関数：orderのみでソート（自動並び替えが無効の場合）
+  const basicSortTasks = (tasks: Task[]): Task[] => {
+    return [...tasks].sort((a, b) => a.order - b.order);
+  };
+
+  // 設定に応じてソート関数を選択
+  const applySorting = (tasks: Task[]): Task[] => {
+    return autoSort ? smartSortTasks(tasks) : basicSortTasks(tasks);
+  };
+
+  const sortTasks = () => {
+    setCurrentTasks(prev => smartSortTasks(prev));
+  };
+
+  const reorderTasks = async (taskIds: string[]) => {
+    try {
+      setError(null);
+      
+      // 手動で並び替えられたタスクの順序を更新
+      const reorderedTasks = taskIds.map((id, index) => {
+        const task = currentTasks.find(t => t.id === id);
+        return task ? { ...task, order: index } : null;
+      }).filter(Boolean) as Task[];
+      
+      // 高度なソート機能を適用
+      const sorted = applySorting(reorderedTasks);
+      
+      // ローカル状態を即座に更新（楽観的更新）
+      setCurrentTasks(sorted);
+      
+      // API呼び出しで順序を保存（元の手動順序を保存）
+      const updatePromises = reorderedTasks.map((task) => 
+        taskListService.updateTask(task.id, { order: task.order })
+      );
+      
+      await Promise.all(updatePromises);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to reorder tasks');
+      // エラー時は元の状態に戻す
+      if (currentTaskListId) {
+        const tasks = await taskListService.getTasks(currentTaskListId);
+        setCurrentTasks(applySorting(tasks));
+      }
+      throw err;
+    }
   };
 
   const deleteCompletedTasks = async () => {
@@ -308,12 +369,26 @@ export const TaskListProvider: React.FC<TaskListProviderProps> = ({ children }) 
     fetchTaskLists();
   }, []);
 
+  // ユーザーが変更されたときに設定を取得
+  useEffect(() => {
+    if (user) {
+      fetchSettings();
+    }
+  }, [user]);
+
   // 現在のタスクリストが変更されたときにタスクを取得
   useEffect(() => {
     if (currentTaskListId) {
       selectTaskList(currentTaskListId);
     }
   }, [currentTaskListId]);
+
+  // autoSort設定が変更されたときに現在のタスクを再ソート
+  useEffect(() => {
+    if (currentTasks.length > 0) {
+      setCurrentTasks(prev => applySorting(prev));
+    }
+  }, [autoSort]);
 
   const value: TaskListContextType = {
     taskLists,
@@ -331,6 +406,7 @@ export const TaskListProvider: React.FC<TaskListProviderProps> = ({ children }) 
     toggleTask,
     deleteTask,
     sortTasks,
+    reorderTasks,
     deleteCompletedTasks,
   };
 

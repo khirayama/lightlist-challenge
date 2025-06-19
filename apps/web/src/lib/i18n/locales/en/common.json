@@ -141,7 +141,10 @@
     "nameUpdateFailed": "Failed to update task name",
     "dueDateSet": "Due date set",
     "dueDateRemoved": "Due date removed",
-    "dueDateUpdateFailed": "Failed to update due date"
+    "dueDateUpdateFailed": "Failed to update due date",
+    "dragToReorder": "Drag to reorder",
+    "reorderSuccess": "Task reordering completed",
+    "reorderFailed": "Failed to reorder tasks"
   },
   "share": {
     "dialogTitle": "Share Task List",

@@ -141,7 +141,10 @@
     "nameUpdateFailed": "タスク名の更新に失敗しました",
     "dueDateSet": "期限を設定しました",
     "dueDateRemoved": "期限を削除しました",
-    "dueDateUpdateFailed": "期限の更新に失敗しました"
+    "dueDateUpdateFailed": "期限の更新に失敗しました",
+    "dragToReorder": "ドラッグして並び替え",
+    "reorderSuccess": "タスクの並び替えが完了しました",
+    "reorderFailed": "タスクの並び替えに失敗しました"
   },
   "share": {
     "dialogTitle": "タスクリストを共有",

@@ -9,6 +9,184 @@ import { useSwipeGesture } from '@/hooks/useSwipeGesture';
 import { ConfirmDialog } from '@/components/ConfirmDialog';
 import { ColorPicker } from '@/components/ColorPicker';
 import { DatePicker } from '@/components/DatePicker';
+import {
+  DndContext,
+  closestCenter,
+  KeyboardSensor,
+  PointerSensor,
+  useSensor,
+  useSensors,
+  DragEndEvent,
+} from '@dnd-kit/core';
+import {
+  arrayMove,
+  SortableContext,
+  sortableKeyboardCoordinates,
+  verticalListSortingStrategy,
+} from '@dnd-kit/sortable';
+import {
+  useSortable,
+} from '@dnd-kit/sortable';
+import { CSS } from '@dnd-kit/utilities';
+
+// ドラッグ可能なタスクアイテムコンポーネント
+interface SortableTaskItemProps {
+  task: {
+    id: string;
+    content: string;
+    completed: boolean;
+    dueDate?: string | null;
+  };
+  isEditing: boolean;
+  editingContent: string;
+  onToggle: () => void;
+  onEdit: () => void;
+  onSave: () => void;
+  onCancel: () => void;
+  onContentChange: (content: string) => void;
+  onDateClick: () => void;
+  onDelete: () => void;
+  dateButtonRef: React.RefObject<HTMLButtonElement>;
+}
+
+const SortableTaskItem: React.FC<SortableTaskItemProps> = ({
+  task,
+  isEditing,
+  editingContent,
+  onToggle,
+  onEdit,
+  onSave,
+  onCancel,
+  onContentChange,
+  onDateClick,
+  onDelete,
+  dateButtonRef,
+}) => {
+  const { t } = useTranslation('common');
+  
+  const {
+    attributes,
+    listeners,
+    setNodeRef,
+    transform,
+    transition,
+    isDragging,
+  } = useSortable({ id: task.id });
+
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+  };
+
+  return (
+    <div
+      ref={setNodeRef}
+      style={style}
+      className={`flex items-center gap-3 p-4 bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 group ${
+        isDragging ? 'opacity-50' : ''
+      }`}
+    >
+      {/* ドラッグハンドル */}
+      {!isEditing && (
+        <div
+          {...attributes}
+          {...listeners}
+          className="drag-handle cursor-move p-1 rounded text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 opacity-0 group-hover:opacity-100 transition-opacity"
+          title={t('task.dragToReorder')}
+          aria-label={t('task.dragToReorder')}
+        >
+          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 8h16M4 16h16" />
+          </svg>
+        </div>
+      )}
+
+      <input
+        type="checkbox"
+        checked={task.completed}
+        onChange={onToggle}
+        className="w-5 h-5 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500"
+      />
+      
+      {isEditing ? (
+        <div className="flex-1">
+          <form
+            onSubmit={(e) => {
+              e.preventDefault();
+              onSave();
+            }}
+            className="flex items-center gap-2"
+          >
+            <input
+              type="text"
+              value={editingContent}
+              onChange={(e) => onContentChange(e.target.value)}
+              onBlur={onSave}
+              onKeyDown={(e) => {
+                if (e.key === 'Escape') {
+                  onCancel();
+                }
+              }}
+              className="flex-1 px-2 py-1 text-sm border border-blue-500 rounded bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+              autoFocus
+            />
+          </form>
+        </div>
+      ) : (
+        <span 
+          className={`flex-1 cursor-pointer hover:text-blue-600 dark:hover:text-blue-400 transition-colors ${
+            task.completed 
+              ? 'line-through text-gray-500 dark:text-gray-400' 
+              : 'text-gray-900 dark:text-white'
+          }`}
+          onDoubleClick={onEdit}
+          title={t('task.doubleClickToEdit')}
+        >
+          {task.content}
+        </span>
+      )}
+      
+      {task.dueDate && (
+        <span className={`text-sm px-2 py-1 rounded ${
+          new Date(task.dueDate) < new Date() && !task.completed
+            ? 'bg-red-100 dark:bg-red-900 text-red-700 dark:text-red-300'
+            : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300'
+        }`}>
+          {new Date(task.dueDate).toLocaleDateString()}
+        </span>
+      )}
+      
+      {!isEditing && (
+        <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+          {/* 日付設定ボタン */}
+          <button
+            ref={dateButtonRef}
+            onClick={onDateClick}
+            className="p-1 rounded text-gray-400 hover:text-blue-600 dark:hover:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/20"
+            title={t('datePicker.setDueDate')}
+            aria-label={t('datePicker.setDueDate')}
+          >
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+            </svg>
+          </button>
+          
+          {/* 削除ボタン */}
+          <button
+            onClick={onDelete}
+            className="p-1 rounded text-gray-400 hover:text-red-600 dark:hover:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20"
+            title={t('common.delete')}
+            aria-label={t('common.delete')}
+          >
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+            </svg>
+          </button>
+        </div>
+      )}
+    </div>
+  );
+};
 
 // サイドバーコンポーネント
 const Sidebar: React.FC<{
@@ -558,7 +736,7 @@ const Sidebar: React.FC<{
 // メインコンテンツコンポーネント
 const MainContent: React.FC = () => {
   const { t } = useTranslation('common');
-  const { currentTasks, currentTaskListId, taskLists, createTask, toggleTask, deleteTask, updateTask, sortTasks, deleteCompletedTasks, error } = useTaskList();
+  const { currentTasks, currentTaskListId, taskLists, createTask, toggleTask, deleteTask, updateTask, sortTasks, reorderTasks, deleteCompletedTasks, error } = useTaskList();
   const { showSuccess, showError, showInfo } = useToast();
   const [newTaskContent, setNewTaskContent] = useState('');
   const [showShareDialog, setShowShareDialog] = useState(false);
@@ -576,7 +754,39 @@ const MainContent: React.FC = () => {
   });
   const dateButtonRefs = useRef<{ [key: string]: HTMLButtonElement | null }>({});
 
+  // ドラッグ&ドロップのセンサー設定
+  const sensors = useSensors(
+    useSensor(PointerSensor),
+    useSensor(KeyboardSensor, {
+      coordinateGetter: sortableKeyboardCoordinates,
+    })
+  );
+
   const currentTaskList = taskLists.find(list => list.id === currentTaskListId);
+
+  // ドラッグ終了時のハンドラー
+  const handleDragEnd = async (event: DragEndEvent) => {
+    const { active, over } = event;
+
+    if (!over || active.id === over.id) {
+      return;
+    }
+
+    const oldIndex = currentTasks.findIndex(task => task.id === active.id);
+    const newIndex = currentTasks.findIndex(task => task.id === over.id);
+
+    if (oldIndex !== -1 && newIndex !== -1) {
+      const newTasks = arrayMove(currentTasks, oldIndex, newIndex);
+      const taskIds = newTasks.map(task => task.id);
+      
+      try {
+        await reorderTasks(taskIds);
+        showSuccess(t('task.reorderSuccess'));
+      } catch (err) {
+        showError(err instanceof Error ? err.message : t('task.reorderFailed'));
+      }
+    }
+  };
 
   const handleCreateTask = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -765,100 +975,35 @@ const MainContent: React.FC = () => {
 
       {/* タスク一覧 */}
       <div className="flex-1 px-6 pb-6">
-        <div className="space-y-2">
-          {currentTasks.map((task) => (
-            <div
-              key={task.id}
-              className="flex items-center gap-3 p-4 bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 group"
-            >
-              <input
-                type="checkbox"
-                checked={task.completed}
-                onChange={() => toggleTask(task.id)}
-                className="w-5 h-5 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500"
-              />
-              
-              {editingTaskId === task.id ? (
-                <div className="flex-1">
-                  <form
-                    onSubmit={(e) => {
-                      e.preventDefault();
-                      handleSaveTask();
-                    }}
-                    className="flex items-center gap-2"
-                  >
-                    <input
-                      type="text"
-                      value={editingTaskContent}
-                      onChange={(e) => setEditingTaskContent(e.target.value)}
-                      onBlur={handleSaveTask}
-                      onKeyDown={(e) => {
-                        if (e.key === 'Escape') {
-                          handleCancelEditTask();
-                        }
-                      }}
-                      className="flex-1 px-2 py-1 text-sm border border-blue-500 rounded bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
-                      autoFocus
-                    />
-                  </form>
-                </div>
-              ) : (
-                <span 
-                  className={`flex-1 cursor-pointer hover:text-blue-600 dark:hover:text-blue-400 transition-colors ${
-                    task.completed 
-                      ? 'line-through text-gray-500 dark:text-gray-400' 
-                      : 'text-gray-900 dark:text-white'
-                  }`}
-                  onDoubleClick={() => handleEditTask(task.id, task.content)}
-                  title={t('task.doubleClickToEdit')}
-                >
-                  {task.content}
-                </span>
-              )}
-              
-              {task.dueDate && (
-                <span className={`text-sm px-2 py-1 rounded ${
-                  new Date(task.dueDate) < new Date() && !task.completed
-                    ? 'bg-red-100 dark:bg-red-900 text-red-700 dark:text-red-300'
-                    : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300'
-                }`}>
-                  {new Date(task.dueDate).toLocaleDateString()}
-                </span>
-              )}
-              
-              {editingTaskId !== task.id && (
-                <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                  {/* 日付設定ボタン */}
-                  <button
-                    ref={(el) => {
-                      dateButtonRefs.current[task.id] = el;
-                    }}
-                    onClick={() => handleDateButtonClick(task.id)}
-                    className="p-1 rounded text-gray-400 hover:text-blue-600 dark:hover:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/20"
-                    title={t('datePicker.setDueDate')}
-                    aria-label={t('datePicker.setDueDate')}
-                  >
-                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                    </svg>
-                  </button>
-                  
-                  {/* 削除ボタン */}
-                  <button
-                    onClick={() => deleteTask(task.id)}
-                    className="p-1 rounded text-gray-400 hover:text-red-600 dark:hover:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20"
-                    title={t('common.delete')}
-                    aria-label={t('common.delete')}
-                  >
-                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                    </svg>
-                  </button>
-                </div>
-              )}
+        <DndContext
+          sensors={sensors}
+          collisionDetection={closestCenter}
+          onDragEnd={handleDragEnd}
+        >
+          <SortableContext
+            items={currentTasks.map(task => task.id)}
+            strategy={verticalListSortingStrategy}
+          >
+            <div className="space-y-2">
+              {currentTasks.map((task) => (
+                <SortableTaskItem
+                  key={task.id}
+                  task={task}
+                  isEditing={editingTaskId === task.id}
+                  editingContent={editingTaskContent}
+                  onToggle={() => toggleTask(task.id)}
+                  onEdit={() => handleEditTask(task.id, task.content)}
+                  onSave={handleSaveTask}
+                  onCancel={handleCancelEditTask}
+                  onContentChange={setEditingTaskContent}
+                  onDateClick={() => handleDateButtonClick(task.id)}
+                  onDelete={() => deleteTask(task.id)}
+                  dateButtonRef={{ current: dateButtonRefs.current[task.id] || null }}
+                />
+              ))}
             </div>
-          ))}
-        </div>
+          </SortableContext>
+        </DndContext>
 
         {currentTasks.length === 0 && (
           <div className="text-center py-12">

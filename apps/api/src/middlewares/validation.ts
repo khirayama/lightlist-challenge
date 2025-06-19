@@ -26,6 +26,8 @@ export const settingsUpdateSchema = z.object({
   body: z.object({
     theme: z.enum(["system", "light", "dark"]).optional(),
     language: z.enum(["ja", "en"]).optional(),
+    taskInsertPosition: z.enum(["top", "bottom"]).optional(),
+    autoSort: z.boolean().optional(),
   }),
 });
 

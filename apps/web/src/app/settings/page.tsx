@@ -42,6 +42,8 @@ export default function Settings() {
       const response = await authService.getSettings(user.id);
       setTheme(response.settings.theme);
       i18n.changeLanguage(response.settings.language);
+      setTaskInsertPosition(response.settings.taskInsertPosition || 'top');
+      setAutoSort(response.settings.autoSort || false);
     } catch (error) {
       console.error('Failed to load settings:', error);
       showError(t('settings.loadError'));
@@ -114,6 +116,29 @@ export default function Settings() {
       showError(t('settings.profile.updateError'));
     } finally {
       setIsProfileLoading(false);
+    }
+  };
+
+  const handleTaskSettingsUpdate = async (updates: { taskInsertPosition?: 'top' | 'bottom'; autoSort?: boolean }) => {
+    if (!user) return;
+    
+    try {
+      setIsSettingsLoading(true);
+      await authService.updateSettings(user.id, updates);
+      
+      if (updates.taskInsertPosition !== undefined) {
+        setTaskInsertPosition(updates.taskInsertPosition);
+      }
+      if (updates.autoSort !== undefined) {
+        setAutoSort(updates.autoSort);
+      }
+      
+      showSuccess(t('settings.task.updateSuccess'));
+    } catch (error) {
+      console.error('Failed to update task settings:', error);
+      showError(t('settings.task.updateError'));
+    } finally {
+      setIsSettingsLoading(false);
     }
   };
 
@@ -244,6 +269,68 @@ export default function Settings() {
               ))}
             </div>
           </div>
+
+          {/* タスク設定 */}
+          {isAuthenticated && (
+            <div className="bg-surface dark:bg-gray-800 p-6 rounded-lg shadow-md border border-border dark:border-gray-700">
+              <h2 className="text-xl font-semibold text-text-primary dark:text-white mb-4">
+                {t('settings.task.title')}
+              </h2>
+              <div className="space-y-6">
+                {/* タスクの挿入位置 */}
+                <div>
+                  <label className="block text-sm font-medium text-text-primary dark:text-gray-300 mb-3">
+                    {t('settings.task.insertPosition')}
+                  </label>
+                  <div className="space-y-3">
+                    {[
+                      { value: 'top', label: 'settings.task.insertTop' },
+                      { value: 'bottom', label: 'settings.task.insertBottom' },
+                    ].map((option) => (
+                      <label
+                        key={option.value}
+                        className="flex items-center space-x-3 cursor-pointer"
+                      >
+                        <input
+                          type="radio"
+                          name="taskInsertPosition"
+                          value={option.value}
+                          checked={taskInsertPosition === option.value}
+                          onChange={() => handleTaskSettingsUpdate({ taskInsertPosition: option.value as 'top' | 'bottom' })}
+                          disabled={isSettingsLoading}
+                          className="w-4 h-4 text-primary border-border dark:border-gray-600 focus:ring-primary disabled:opacity-50"
+                        />
+                        <span className="text-text-primary dark:text-gray-300">
+                          {t(option.label)}
+                        </span>
+                      </label>
+                    ))}
+                  </div>
+                </div>
+
+                {/* 自動並び替え */}
+                <div>
+                  <label className="flex items-center space-x-3 cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={autoSort}
+                      onChange={(e) => handleTaskSettingsUpdate({ autoSort: e.target.checked })}
+                      disabled={isSettingsLoading}
+                      className="w-4 h-4 text-primary border-border dark:border-gray-600 rounded focus:ring-primary disabled:opacity-50"
+                    />
+                    <div>
+                      <span className="text-text-primary dark:text-gray-300 font-medium">
+                        {t('settings.task.autoSort')}
+                      </span>
+                      <p className="text-sm text-text-secondary dark:text-gray-400 mt-1">
+                        {t('settings.task.autoSortDescription')}
+                      </p>
+                    </div>
+                  </label>
+                </div>
+              </div>
+            </div>
+          )}
 
           {/* ログアウト */}
           {isAuthenticated && (
