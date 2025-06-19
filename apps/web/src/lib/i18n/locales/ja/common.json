@@ -34,7 +34,24 @@
       "updateSuccess": "言語設定を更新しました",
       "updateError": "言語設定の更新に失敗しました"
     },
-    "backToHome": "ホームに戻る"
+    "backToHome": "ホームに戻る",
+    "task": {
+      "title": "タスク設定",
+      "insertPosition": "タスクの挿入位置",
+      "insertTop": "上に追加（新しいタスクを上部に追加）",
+      "insertBottom": "下に追加（新しいタスクを下部に追加）",
+      "autoSort": "自動並び替え",
+      "autoSortDescription": "タスクを完了・未完了、日付有無、日付順で自動的に並び替えます",
+      "updateSuccess": "タスク設定を更新しました",
+      "updateError": "タスク設定の更新に失敗しました"
+    },
+    "account": {
+      "title": "アカウント",
+      "confirmLogout": "ログアウトしますか？",
+      "logoutError": "ログアウトに失敗しました",
+      "delete": "アカウントを削除",
+      "confirmDelete": "本当にアカウントを削除しますか？この操作は取り消せません。"
+    }
   },
   "auth": {
     "login": "ログイン",
@@ -74,6 +91,54 @@
   },
   "common": {
     "update": "更新",
-    "updating": "更新中..."
+    "updating": "更新中...",
+    "loading": "読み込み中...",
+    "creating": "作成中...",
+    "create": "作成",
+    "cancel": "キャンセル",
+    "delete": "削除",
+    "close": "閉じる",
+    "backToHome": "ホームに戻る",
+    "notImplemented": "この機能はまだ実装されていません"
+  },
+  "taskList": {
+    "title": "タスクリスト",
+    "add": "追加",
+    "namePlaceholder": "タスクリスト名を入力...",
+    "selectPrompt": "タスクリストを選択してください",
+    "noTasks": "タスクがありません",
+    "taskCount": "{{completed}}/{{total}} 完了",
+    "share": "共有",
+    "sort": "並び替え",
+    "deleteCompleted": "完了タスクを削除",
+    "confirmDeleteCompleted": "完了済みタスクを削除しますか？",
+    "completedDeleted": "完了タスクを削除しました",
+    "sortingTasks": "タスクを並び替えています...",
+    "doubleClickToEdit": "ダブルクリックで編集",
+    "nameUpdated": "タスクリスト名を更新しました"
+  },
+  "task": {
+    "inputPlaceholder": "新しいタスクを入力...",
+    "add": "追加",
+    "emptyMessage": "まだタスクがありません。上記のフォームから新しいタスクを追加してください。"
+  },
+  "share": {
+    "dialogTitle": "タスクリストを共有",
+    "dialogDescription": "以下のリンクを共有して、他のユーザーを招待しましょう。",
+    "copyLink": "リンクをコピー",
+    "linkCopied": "リンクをコピーしました",
+    "accessingSharedList": "共有タスクリストにアクセスしています...",
+    "accessError": "共有タスクリストの取得に失敗しました",
+    "notFound": "共有タスクリストが見つかりません",
+    "notFoundDescription": "リンクが無効か、共有が解除されている可能性があります。",
+    "joinTaskList": "タスクリストに参加",
+    "invitedToJoin": "このタスクリストに招待されています。",
+    "permission": "権限",
+    "permission.view": "閲覧のみ",
+    "permission.edit": "編集可能",
+    "joinButton": "参加する",
+    "loginToJoin": "ログインして参加",
+    "joinSuccess": "タスクリストに参加しました",
+    "joinError": "タスクリストへの参加に失敗しました"
   }
 }

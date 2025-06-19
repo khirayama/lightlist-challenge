@@ -34,7 +34,24 @@
       "updateSuccess": "Language updated successfully",
       "updateError": "Failed to update language"
     },
-    "backToHome": "Back to Home"
+    "backToHome": "Back to Home",
+    "task": {
+      "title": "Task Settings",
+      "insertPosition": "Task Insert Position",
+      "insertTop": "Add to top (new tasks at the top)",
+      "insertBottom": "Add to bottom (new tasks at the bottom)",
+      "autoSort": "Auto Sort",
+      "autoSortDescription": "Automatically sort tasks by completion status, due date presence, and due date order",
+      "updateSuccess": "Task settings updated successfully",
+      "updateError": "Failed to update task settings"
+    },
+    "account": {
+      "title": "Account",
+      "confirmLogout": "Are you sure you want to logout?",
+      "logoutError": "Failed to logout",
+      "delete": "Delete Account",
+      "confirmDelete": "Are you sure you want to delete your account? This action cannot be undone."
+    }
   },
   "auth": {
     "login": "Login",
@@ -74,6 +91,54 @@
   },
   "common": {
     "update": "Update",
-    "updating": "Updating..."
+    "updating": "Updating...",
+    "loading": "Loading...",
+    "creating": "Creating...",
+    "create": "Create",
+    "cancel": "Cancel",
+    "delete": "Delete",
+    "close": "Close",
+    "backToHome": "Back to Home",
+    "notImplemented": "This feature is not yet implemented"
+  },
+  "taskList": {
+    "title": "Task Lists",
+    "add": "Add",
+    "namePlaceholder": "Enter task list name...",
+    "selectPrompt": "Please select a task list",
+    "noTasks": "No tasks",
+    "taskCount": "{{completed}}/{{total}} completed",
+    "share": "Share",
+    "sort": "Sort",
+    "deleteCompleted": "Delete Completed",
+    "confirmDeleteCompleted": "Delete all completed tasks?",
+    "completedDeleted": "Completed tasks deleted",
+    "sortingTasks": "Sorting tasks...",
+    "doubleClickToEdit": "Double-click to edit",
+    "nameUpdated": "Task list name updated"
+  },
+  "task": {
+    "inputPlaceholder": "Enter a new task...",
+    "add": "Add",
+    "emptyMessage": "No tasks yet. Add a new task using the form above."
+  },
+  "share": {
+    "dialogTitle": "Share Task List",
+    "dialogDescription": "Share this link to invite other users.",
+    "copyLink": "Copy Link",
+    "linkCopied": "Link copied",
+    "accessingSharedList": "Accessing shared task list...",
+    "accessError": "Failed to access shared task list",
+    "notFound": "Shared task list not found",
+    "notFoundDescription": "The link may be invalid or sharing has been revoked.",
+    "joinTaskList": "Join Task List",
+    "invitedToJoin": "You've been invited to join this task list.",
+    "permission": "Permission",
+    "permission.view": "View only",
+    "permission.edit": "Can edit",
+    "joinButton": "Join",
+    "loginToJoin": "Login to Join",
+    "joinSuccess": "Successfully joined task list",
+    "joinError": "Failed to join task list"
   }
 }

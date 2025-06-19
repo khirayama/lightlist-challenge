@@ -7,16 +7,21 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/contexts/ToastContext';
 import { LoadingButton } from '@/components/Loading';
 import { authService } from '@/lib/auth';
+import { useRouter } from 'next/navigation';
 
 export default function Settings() {
   const { t, i18n } = useTranslation('common');
   const { theme, setTheme, themes } = useTheme();
-  const { user, isAuthenticated, refreshAuth } = useAuth();
+  const { user, isAuthenticated, refreshAuth, logout } = useAuth();
   const { showSuccess, showError } = useToast();
+  const router = useRouter();
   const [mounted, setMounted] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [name, setName] = useState('');
   const [isProfileLoading, setIsProfileLoading] = useState(false);
+  const [taskInsertPosition, setTaskInsertPosition] = useState<'top' | 'bottom'>('top');
+  const [autoSort, setAutoSort] = useState(false);
+  const [isSettingsLoading, setIsSettingsLoading] = useState(false);
 
   useEffect(() => {
     setMounted(true);

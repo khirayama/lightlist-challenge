@@ -4,15 +4,20 @@ import React, { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useAuth } from '@/contexts/AuthContext';
 import { TaskListProvider, useTaskList } from '@/contexts/TaskListContext';
+import { useToast } from '@/contexts/ToastContext';
 
 // サイドバーコンポーネント
 const Sidebar: React.FC = () => {
+  const { t } = useTranslation('common');
   const { taskLists, currentTaskListId, selectTaskList, createTaskList, isLoading, error } = useTaskList();
-  const { logout } = useAuth();
+  const { user, logout } = useAuth();
+  const { showSuccess, showError, showInfo } = useToast();
   const [showCreateForm, setShowCreateForm] = useState(false);
   const [newTaskListName, setNewTaskListName] = useState('');
   const [createError, setCreateError] = useState<string | null>(null);
   const [isCreating, setIsCreating] = useState(false);
+  const [editingTaskListId, setEditingTaskListId] = useState<string | null>(null);
+  const [editingTaskListName, setEditingTaskListName] = useState('');
 
   const handleCreateTaskList = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -67,20 +72,27 @@ const Sidebar: React.FC = () => {
     <div className="w-80 bg-white dark:bg-gray-800 border-r border-gray-200 dark:border-gray-700 flex flex-col">
       {/* ヘッダー */}
       <div className="p-4 border-b border-gray-200 dark:border-gray-700">
-        <div className="flex items-center justify-between mb-4">
+        <div className="flex items-center justify-between mb-2">
           <h1 className="text-xl font-bold text-gray-900 dark:text-white">Lightlist</h1>
+        </div>
+        <div className="flex items-center justify-between">
+          <div className="text-sm text-gray-600 dark:text-gray-400">
+            {user?.name || user?.email}
+          </div>
           <div className="flex gap-2">
             <a 
               href="/settings"
               className="px-3 py-1 text-sm bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded hover:bg-gray-200 dark:hover:bg-gray-600"
+              title={t('settings.title')}
             >
-              設定
+              {t('settings.title')}
             </a>
             <button
               onClick={handleLogout}
               className="px-3 py-1 text-sm bg-red-100 dark:bg-red-900 text-red-700 dark:text-red-300 rounded hover:bg-red-200 dark:hover:bg-red-800"
+              title={t('auth.logout')}
             >
-              ログアウト
+              {t('auth.logout')}
             </button>
           </div>
         </div>
@@ -89,12 +101,13 @@ const Sidebar: React.FC = () => {
       {/* タスクリスト一覧 */}
       <div className="flex-1 overflow-y-auto p-4">
         <div className="flex items-center justify-between mb-4">
-          <h2 className="text-lg font-semibold text-gray-900 dark:text-white">タスクリスト</h2>
+          <h2 className="text-lg font-semibold text-gray-900 dark:text-white">{t('taskList.title')}</h2>
           <button
             onClick={() => setShowCreateForm(true)}
             className="px-3 py-1 text-sm bg-blue-500 text-white rounded hover:bg-blue-600"
+            title={t('taskList.add')}
           >
-            追加
+            {t('taskList.add')}
           </button>
         </div>
 
@@ -109,7 +122,7 @@ const Sidebar: React.FC = () => {
                   setNewTaskListName(e.target.value);
                   setCreateError(null); // 入力時にエラーをクリア
                 }}
-                placeholder="タスクリスト名を入力..."
+                placeholder={t('taskList.namePlaceholder')}
                 className={`w-full px-3 py-2 border rounded bg-white dark:bg-gray-800 text-gray-900 dark:text-white ${
                   createError 
                     ? 'border-red-500 dark:border-red-400' 
@@ -138,10 +151,10 @@ const Sidebar: React.FC = () => {
                 {isCreating ? (
                   <>
                     <div className="w-3 h-3 border border-white border-t-transparent rounded-full animate-spin"></div>
-                    作成中...
+                    {t('common.creating')}
                   </>
                 ) : (
-                  '作成'
+                  t('common.create')
                 )}
               </button>
               <button
@@ -150,7 +163,7 @@ const Sidebar: React.FC = () => {
                 disabled={isCreating}
                 className="px-3 py-1 text-sm bg-gray-500 text-white rounded hover:bg-gray-600 disabled:opacity-50"
               >
-                キャンセル
+                {t('common.cancel')}
               </button>
             </div>
           </form>
@@ -186,7 +199,7 @@ const Sidebar: React.FC = () => {
 
         {isLoading && (
           <div className="text-center py-4">
-            <div className="text-gray-500 dark:text-gray-400">読み込み中...</div>
+            <div className="text-gray-500 dark:text-gray-400">{t('common.loading')}</div>
           </div>
         )}
       </div>
@@ -196,8 +209,14 @@ const Sidebar: React.FC = () => {
 
 // メインコンテンツコンポーネント
 const MainContent: React.FC = () => {
+  const { t } = useTranslation('common');
   const { currentTasks, currentTaskListId, taskLists, createTask, toggleTask, deleteTask, error } = useTaskList();
+  const { showSuccess, showError, showInfo } = useToast();
   const [newTaskContent, setNewTaskContent] = useState('');
+  const [showShareDialog, setShowShareDialog] = useState(false);
+  const [shareUrl, setShareUrl] = useState('');
+  const [isEditingTaskListName, setIsEditingTaskListName] = useState(false);
+  const [editingTaskListName, setEditingTaskListName] = useState('');
 
   const currentTaskList = taskLists.find(list => list.id === currentTaskListId);
 
@@ -213,7 +232,7 @@ const MainContent: React.FC = () => {
     return (
       <div className="flex-1 flex items-center justify-center">
         <div className="text-center text-gray-500 dark:text-gray-400">
-          <p>タスクリストを選択してください</p>
+          <p>{t('taskList.selectPrompt')}</p>
         </div>
       </div>
     );
@@ -223,15 +242,79 @@ const MainContent: React.FC = () => {
     <div className="flex-1 flex flex-col bg-gray-50 dark:bg-gray-900">
       {/* ヘッダー */}
       <div className="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 p-6">
-        <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
-          {currentTaskList?.name}
-        </h1>
-        <p className="text-gray-500 dark:text-gray-400 mt-1">
-          {currentTasks.length > 0 
-            ? `${currentTasks.filter(t => t.completed).length}/${currentTasks.length} 完了`
-            : 'タスクがありません'
-          }
-        </p>
+        <div className="flex items-start justify-between">
+          <div className="flex-1">
+            {isEditingTaskListName ? (
+              <form onSubmit={(e) => {
+                e.preventDefault();
+                // TODO: タスクリスト名の更新処理
+                setIsEditingTaskListName(false);
+                showSuccess(t('taskList.nameUpdated'));
+              }}>
+                <input
+                  type="text"
+                  value={editingTaskListName}
+                  onChange={(e) => setEditingTaskListName(e.target.value)}
+                  onBlur={() => setIsEditingTaskListName(false)}
+                  className="text-2xl font-bold bg-transparent border-b-2 border-blue-500 text-gray-900 dark:text-white focus:outline-none"
+                  autoFocus
+                />
+              </form>
+            ) : (
+              <h1 
+                className="text-2xl font-bold text-gray-900 dark:text-white cursor-pointer hover:text-gray-700 dark:hover:text-gray-300"
+                onDoubleClick={() => {
+                  setEditingTaskListName(currentTaskList?.name || '');
+                  setIsEditingTaskListName(true);
+                }}
+                title={t('taskList.doubleClickToEdit')}
+              >
+                {currentTaskList?.name}
+              </h1>
+            )}
+            <p className="text-gray-500 dark:text-gray-400 mt-1">
+              {currentTasks.length > 0 
+                ? t('taskList.taskCount', { completed: currentTasks.filter(t => t.completed).length, total: currentTasks.length })
+                : t('taskList.noTasks')
+              }
+            </p>
+          </div>
+          <div className="flex gap-2">
+            <button
+              onClick={() => {
+                // TODO: 共有リンク生成処理
+                setShareUrl(`${window.location.origin}/share/dummy-token`);
+                setShowShareDialog(true);
+              }}
+              className="px-3 py-1 text-sm bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-300 rounded hover:bg-blue-200 dark:hover:bg-blue-800"
+              title={t('taskList.share')}
+            >
+              {t('taskList.share')}
+            </button>
+            <button
+              onClick={() => {
+                // TODO: タスクの並び替え処理
+                showInfo(t('taskList.sortingTasks'));
+              }}
+              className="px-3 py-1 text-sm bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded hover:bg-gray-200 dark:hover:bg-gray-600"
+              title={t('taskList.sort')}
+            >
+              {t('taskList.sort')}
+            </button>
+            <button
+              onClick={() => {
+                // TODO: 完了タスクの削除処理
+                if (window.confirm(t('taskList.confirmDeleteCompleted'))) {
+                  showSuccess(t('taskList.completedDeleted'));
+                }
+              }}
+              className="px-3 py-1 text-sm bg-red-100 dark:bg-red-900 text-red-700 dark:text-red-300 rounded hover:bg-red-200 dark:hover:bg-red-800"
+              title={t('taskList.deleteCompleted')}
+            >
+              {t('taskList.deleteCompleted')}
+            </button>
+          </div>
+        </div>
       </div>
 
       {/* エラー表示 */}
@@ -248,7 +331,7 @@ const MainContent: React.FC = () => {
             type="text"
             value={newTaskContent}
             onChange={(e) => setNewTaskContent(e.target.value)}
-            placeholder="新しいタスクを入力..."
+            placeholder={t('task.inputPlaceholder')}
             className="flex-1 px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
           />
           <button
@@ -256,7 +339,7 @@ const MainContent: React.FC = () => {
             disabled={!newTaskContent.trim()}
             className="px-6 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            追加
+            {t('task.add')}
           </button>
         </form>
       </div>
@@ -291,7 +374,7 @@ const MainContent: React.FC = () => {
                 onClick={() => deleteTask(task.id)}
                 className="text-red-500 hover:text-red-700 dark:text-red-400 dark:hover:text-red-300"
               >
-                削除
+                {t('common.delete')}
               </button>
             </div>
           ))}
@@ -300,12 +383,50 @@ const MainContent: React.FC = () => {
         {currentTasks.length === 0 && (
           <div className="text-center py-12">
             <p className="text-gray-500 dark:text-gray-400">
-              まだタスクがありません。<br />
-              上記のフォームから新しいタスクを追加してください。
+              {t('task.emptyMessage')}
             </p>
           </div>
         )}
       </div>
+
+      {/* 共有ダイアログ */}
+      {showShareDialog && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+          <div className="bg-white dark:bg-gray-800 rounded-lg p-6 max-w-md w-full">
+            <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-4">
+              {t('share.dialogTitle')}
+            </h2>
+            <p className="text-gray-600 dark:text-gray-400 mb-4">
+              {t('share.dialogDescription')}
+            </p>
+            <div className="bg-gray-100 dark:bg-gray-700 rounded p-3 mb-4">
+              <input
+                type="text"
+                value={shareUrl}
+                readOnly
+                className="w-full bg-transparent text-gray-900 dark:text-white text-sm"
+              />
+            </div>
+            <div className="flex gap-2">
+              <button
+                onClick={() => {
+                  navigator.clipboard.writeText(shareUrl);
+                  showSuccess(t('share.linkCopied'));
+                }}
+                className="flex-1 px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
+              >
+                {t('share.copyLink')}
+              </button>
+              <button
+                onClick={() => setShowShareDialog(false)}
+                className="px-4 py-2 bg-gray-300 dark:bg-gray-600 text-gray-700 dark:text-gray-300 rounded hover:bg-gray-400 dark:hover:bg-gray-500"
+              >
+                {t('common.close')}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

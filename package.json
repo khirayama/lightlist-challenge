@@ -2,17 +2,15 @@
   "name": "lightlist",
   "version": "1.0.0",
   "private": true,
-  "workspaces": [
-    "apps/*",
-    "packages/*"
-  ],
+  "workspaces": ["apps/*", "packages/*"],
   "scripts": {
     "dev": "turbo dev",
     "build": "turbo build",
     "test": "turbo test",
     "check": "turbo check",
     "clean": "turbo clean && rm -rf node_modules",
-    "setup": "turbo setup"
+    "setup": "turbo setup",
+    "cost": "npx -y ccusage"
   },
   "devDependencies": {
     "@biomejs/biome": "^1.9.4",
