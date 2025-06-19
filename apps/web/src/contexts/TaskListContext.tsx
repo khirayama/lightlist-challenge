@@ -15,6 +15,7 @@ interface TaskListContextType {
   fetchTaskLists: () => Promise<void>;
   createTaskList: (request: CreateTaskListRequest) => Promise<void>;
   selectTaskList: (taskListId: string) => Promise<void>;
+  deleteTaskList: (taskListId: string) => Promise<void>;
   
   // Task operations
   createTask: (content: string) => Promise<void>;
@@ -163,6 +164,33 @@ export const TaskListProvider: React.FC<TaskListProviderProps> = ({ children }) 
     }
   };
 
+  const deleteTaskList = async (taskListId: string) => {
+    try {
+      setError(null);
+      await taskListService.deleteTaskList(taskListId);
+      
+      // タスクリストを削除
+      setTaskLists(prev => prev.filter(list => list.id !== taskListId));
+      
+      // 削除されたタスクリストが現在選択されている場合
+      if (currentTaskListId === taskListId) {
+        setCurrentTaskListId(null);
+        setCurrentTasks([]);
+        
+        // 他のタスクリストがある場合は最初のものを選択
+        setTaskLists(prev => {
+          const remainingLists = prev.filter(list => list.id !== taskListId);
+          if (remainingLists.length > 0) {
+            setCurrentTaskListId(remainingLists[0].id);
+          }
+          return remainingLists;
+        });
+      }
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to delete task list');
+    }
+  };
+
   // 初期化時にタスクリストを取得
   useEffect(() => {
     fetchTaskLists();
@@ -184,6 +212,7 @@ export const TaskListProvider: React.FC<TaskListProviderProps> = ({ children }) 
     fetchTaskLists,
     createTaskList,
     selectTaskList,
+    deleteTaskList,
     createTask,
     toggleTask,
     deleteTask,

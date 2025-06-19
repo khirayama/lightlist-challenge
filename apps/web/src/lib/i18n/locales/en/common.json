@@ -98,6 +98,7 @@
     "cancel": "Cancel",
     "delete": "Delete",
     "close": "Close",
+    "confirm": "Confirm",
     "backToHome": "Back to Home",
     "notImplemented": "This feature is not yet implemented"
   },
@@ -110,12 +111,17 @@
     "taskCount": "{{completed}}/{{total}} completed",
     "share": "Share",
     "sort": "Sort",
+    "delete": "Delete",
     "deleteCompleted": "Delete Completed",
     "confirmDeleteCompleted": "Delete all completed tasks?",
     "completedDeleted": "Completed tasks deleted",
     "sortingTasks": "Sorting tasks...",
     "doubleClickToEdit": "Double-click to edit",
-    "nameUpdated": "Task list name updated"
+    "nameUpdated": "Task list name updated",
+    "confirmDeleteTitle": "Delete Task List",
+    "confirmDeleteMessage": "Delete \"{{name}}\"? This action cannot be undone.",
+    "deleteSuccess": "\"{{name}}\" has been deleted",
+    "deleteFailed": "Failed to delete task list"
   },
   "task": {
     "inputPlaceholder": "Enter a new task...",

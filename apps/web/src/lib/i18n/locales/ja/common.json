@@ -98,6 +98,7 @@
     "cancel": "キャンセル",
     "delete": "削除",
     "close": "閉じる",
+    "confirm": "確認",
     "backToHome": "ホームに戻る",
     "notImplemented": "この機能はまだ実装されていません"
   },
@@ -110,12 +111,17 @@
     "taskCount": "{{completed}}/{{total}} 完了",
     "share": "共有",
     "sort": "並び替え",
+    "delete": "削除",
     "deleteCompleted": "完了タスクを削除",
     "confirmDeleteCompleted": "完了済みタスクを削除しますか？",
     "completedDeleted": "完了タスクを削除しました",
     "sortingTasks": "タスクを並び替えています...",
     "doubleClickToEdit": "ダブルクリックで編集",
-    "nameUpdated": "タスクリスト名を更新しました"
+    "nameUpdated": "タスクリスト名を更新しました",
+    "confirmDeleteTitle": "タスクリストを削除",
+    "confirmDeleteMessage": "「{{name}}」を削除しますか？この操作は取り消せません。",
+    "deleteSuccess": "「{{name}}」を削除しました",
+    "deleteFailed": "タスクリストの削除に失敗しました"
   },
   "task": {
     "inputPlaceholder": "新しいタスクを入力...",
