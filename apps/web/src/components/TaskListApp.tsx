@@ -7,6 +7,8 @@ import { TaskListProvider, useTaskList } from '@/contexts/TaskListContext';
 import { useToast } from '@/contexts/ToastContext';
 import { useSwipeGesture } from '@/hooks/useSwipeGesture';
 import { ConfirmDialog } from '@/components/ConfirmDialog';
+import { ColorPicker } from '@/components/ColorPicker';
+import { DatePicker } from '@/components/DatePicker';
 
 // サイドバーコンポーネント
 const Sidebar: React.FC<{
@@ -14,7 +16,7 @@ const Sidebar: React.FC<{
   isMobile?: boolean;
 }> = ({ onClose, isMobile = false }) => {
   const { t } = useTranslation('common');
-  const { taskLists, currentTaskListId, selectTaskList, createTaskList, deleteTaskList, isLoading, error } = useTaskList();
+  const { taskLists, currentTaskListId, selectTaskList, createTaskList, updateTaskList, deleteTaskList, isLoading, error } = useTaskList();
   const { user } = useAuth();
   const { showSuccess, showError, showInfo } = useToast();
   const [showCreateForm, setShowCreateForm] = useState(false);
@@ -32,6 +34,16 @@ const Sidebar: React.FC<{
     taskListId: '',
     taskListName: '',
   });
+  const [colorPicker, setColorPicker] = useState<{
+    isOpen: boolean;
+    taskListId: string;
+  }>({
+    isOpen: false,
+    taskListId: '',
+  });
+  const colorButtonRefs = useRef<{ [key: string]: HTMLButtonElement | null }>({});
+  const [draggedTaskListId, setDraggedTaskListId] = useState<string | null>(null);
+  const [dragOverTaskListId, setDragOverTaskListId] = useState<string | null>(null);
 
   // タスクリスト選択時にモバイルメニューを閉じる
   const handleSelectTaskList = (taskListId: string) => {
@@ -102,6 +114,149 @@ const Sidebar: React.FC<{
 
   const cancelDeleteTaskList = () => {
     setDeleteConfirmDialog({ isOpen: false, taskListId: '', taskListName: '' });
+  };
+
+  const handleColorButtonClick = (taskListId: string) => {
+    setColorPicker({
+      isOpen: true,
+      taskListId,
+    });
+  };
+
+  const handleColorChange = async (color: string) => {
+    try {
+      await updateTaskList(colorPicker.taskListId, { color });
+      showSuccess(t('taskList.colorUpdated'));
+      setColorPicker({ isOpen: false, taskListId: '' });
+    } catch (err) {
+      showError(err instanceof Error ? err.message : t('taskList.colorUpdateFailed'));
+    }
+  };
+
+  const closeColorPicker = () => {
+    setColorPicker({ isOpen: false, taskListId: '' });
+  };
+
+  const handleEditTaskListName = (taskListId: string, currentName: string) => {
+    setEditingTaskListId(taskListId);
+    setEditingTaskListName(currentName);
+  };
+
+  const handleSaveTaskListName = async () => {
+    if (!editingTaskListId) return;
+    
+    const trimmedName = editingTaskListName.trim();
+    if (!trimmedName) {
+      setEditingTaskListId(null);
+      setEditingTaskListName('');
+      return;
+    }
+
+    // 重複チェック
+    const existingTaskList = taskLists.find(list => list.name === trimmedName && list.id !== editingTaskListId);
+    if (existingTaskList) {
+      showError(t('taskList.duplicateName'));
+      return;
+    }
+
+    try {
+      await updateTaskList(editingTaskListId, { name: trimmedName });
+      showSuccess(t('taskList.nameUpdated'));
+      setEditingTaskListId(null);
+      setEditingTaskListName('');
+    } catch (err) {
+      showError(err instanceof Error ? err.message : t('taskList.nameUpdateFailed'));
+    }
+  };
+
+  const handleCancelEditTaskListName = () => {
+    setEditingTaskListId(null);
+    setEditingTaskListName('');
+  };
+
+  // ドラッグ&ドロップ関連のハンドラー
+  const handleDragStart = (e: React.DragEvent, taskListId: string) => {
+    setDraggedTaskListId(taskListId);
+    e.dataTransfer.effectAllowed = 'move';
+    e.dataTransfer.setData('text/plain', taskListId);
+  };
+
+  const handleDragEnd = () => {
+    setDraggedTaskListId(null);
+    setDragOverTaskListId(null);
+  };
+
+  const handleDragOver = (e: React.DragEvent, taskListId: string) => {
+    e.preventDefault();
+    e.dataTransfer.dropEffect = 'move';
+    setDragOverTaskListId(taskListId);
+  };
+
+  const handleDragLeave = () => {
+    setDragOverTaskListId(null);
+  };
+
+  const handleDrop = async (e: React.DragEvent, targetTaskListId: string) => {
+    e.preventDefault();
+    
+    const sourceTaskListId = e.dataTransfer.getData('text/plain');
+    if (!sourceTaskListId || sourceTaskListId === targetTaskListId) {
+      setDraggedTaskListId(null);
+      setDragOverTaskListId(null);
+      return;
+    }
+
+    try {
+      // 並び替え処理
+      const sourceIndex = taskLists.findIndex(list => list.id === sourceTaskListId);
+      const targetIndex = taskLists.findIndex(list => list.id === targetTaskListId);
+      
+      if (sourceIndex === -1 || targetIndex === -1) return;
+
+      // 新しい順序を計算
+      const newTaskLists = [...taskLists];
+      const [movedItem] = newTaskLists.splice(sourceIndex, 1);
+      newTaskLists.splice(targetIndex, 0, movedItem);
+
+      // 順序を更新
+      const updatePromises = newTaskLists.map((list, index) => 
+        updateTaskList(list.id, { order: index })
+      );
+
+      await Promise.all(updatePromises);
+      showSuccess(t('taskList.sortSuccess'));
+    } catch (err) {
+      showError(err instanceof Error ? err.message : t('taskList.sortFailed'));
+    } finally {
+      setDraggedTaskListId(null);
+      setDragOverTaskListId(null);
+    }
+  };
+
+  // キーボードでの並び替え
+  const handleKeyboardSort = async (taskListId: string, direction: 'up' | 'down') => {
+    const currentIndex = taskLists.findIndex(list => list.id === taskListId);
+    if (currentIndex === -1) return;
+
+    const targetIndex = direction === 'up' ? currentIndex - 1 : currentIndex + 1;
+    if (targetIndex < 0 || targetIndex >= taskLists.length) return;
+
+    try {
+      // 隣接するアイテムと位置を交換
+      const newTaskLists = [...taskLists];
+      [newTaskLists[currentIndex], newTaskLists[targetIndex]] = [newTaskLists[targetIndex], newTaskLists[currentIndex]];
+
+      // 順序を更新
+      const updatePromises = [
+        updateTaskList(newTaskLists[currentIndex].id, { order: currentIndex }),
+        updateTaskList(newTaskLists[targetIndex].id, { order: targetIndex })
+      ];
+
+      await Promise.all(updatePromises);
+      showSuccess(t('taskList.sortSuccess'));
+    } catch (err) {
+      showError(err instanceof Error ? err.message : t('taskList.sortFailed'));
+    }
   };
 
 
@@ -216,41 +371,144 @@ const Sidebar: React.FC<{
           {taskLists.map((taskList) => (
             <div
               key={taskList.id}
-              className={`p-3 rounded transition-colors group ${
+              draggable={editingTaskListId !== taskList.id}
+              onDragStart={(e) => handleDragStart(e, taskList.id)}
+              onDragEnd={handleDragEnd}
+              onDragOver={(e) => handleDragOver(e, taskList.id)}
+              onDragLeave={handleDragLeave}
+              onDrop={(e) => handleDrop(e, taskList.id)}
+              className={`p-3 rounded transition-all group ${
                 currentTaskListId === taskList.id
                   ? 'bg-blue-100 dark:bg-blue-900 border-l-4 border-blue-500'
                   : 'bg-gray-50 dark:bg-gray-700 hover:bg-gray-100 dark:hover:bg-gray-600'
+              } ${
+                draggedTaskListId === taskList.id 
+                  ? 'opacity-50 scale-95 shadow-lg' 
+                  : ''
+              } ${
+                dragOverTaskListId === taskList.id && draggedTaskListId !== taskList.id
+                  ? 'border-2 border-blue-400 border-dashed bg-blue-50 dark:bg-blue-900/20'
+                  : ''
               }`}
             >
               <div 
-                onClick={() => handleSelectTaskList(taskList.id)}
-                className="cursor-pointer"
+                onClick={() => {
+                  if (editingTaskListId !== taskList.id) {
+                    handleSelectTaskList(taskList.id);
+                  }
+                }}
+                className={editingTaskListId === taskList.id ? '' : 'cursor-pointer'}
               >
                 <div className="flex items-center justify-between">
-                  <h3 className="font-medium text-gray-900 dark:text-white">{taskList.name}</h3>
+                  {/* ドラッグハンドル */}
+                  {editingTaskListId !== taskList.id && (
+                    <div className="flex items-center gap-2">
+                      <div 
+                        className="drag-handle cursor-move p-1 rounded text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 opacity-0 group-hover:opacity-100 transition-opacity"
+                        title={t('taskList.dragToReorder')}
+                        aria-label={t('taskList.dragToReorder')}
+                        onKeyDown={(e) => {
+                          if (e.key === 'ArrowUp' && (e.altKey || e.metaKey)) {
+                            e.preventDefault();
+                            handleKeyboardSort(taskList.id, 'up');
+                          } else if (e.key === 'ArrowDown' && (e.altKey || e.metaKey)) {
+                            e.preventDefault();
+                            handleKeyboardSort(taskList.id, 'down');
+                          }
+                        }}
+                        tabIndex={0}
+                      >
+                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 8h16M4 16h16" />
+                        </svg>
+                      </div>
+                    </div>
+                  )}
+
+                  {editingTaskListId === taskList.id ? (
+                    <div className="flex-1 mr-2">
+                      <form
+                        onSubmit={(e) => {
+                          e.preventDefault();
+                          handleSaveTaskListName();
+                        }}
+                        className="flex items-center gap-1"
+                      >
+                        <input
+                          type="text"
+                          value={editingTaskListName}
+                          onChange={(e) => setEditingTaskListName(e.target.value)}
+                          onBlur={handleSaveTaskListName}
+                          onKeyDown={(e) => {
+                            if (e.key === 'Escape') {
+                              handleCancelEditTaskListName();
+                            }
+                          }}
+                          className="flex-1 px-2 py-1 text-sm border border-blue-500 rounded bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                          maxLength={50}
+                          autoFocus
+                        />
+                      </form>
+                    </div>
+                  ) : (
+                    <h3 
+                      className="flex-1 font-medium text-gray-900 dark:text-white cursor-pointer hover:text-blue-600 dark:hover:text-blue-400 transition-colors"
+                      onDoubleClick={() => handleEditTaskListName(taskList.id, taskList.name)}
+                      title={t('taskList.doubleClickToEdit')}
+                    >
+                      {taskList.name}
+                    </h3>
+                  )}
                   <div className="flex items-center gap-2">
                     <div className="text-sm text-gray-500 dark:text-gray-400">
                       {taskList.completedCount}/{taskList.taskCount}
                     </div>
-                    {/* 削除ボタン */}
-                    <button
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        handleDeleteTaskList(taskList.id, taskList.name);
-                      }}
-                      className="p-1 rounded text-gray-400 hover:text-red-600 dark:hover:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 opacity-0 group-hover:opacity-100 transition-opacity"
-                      title={t('taskList.delete')}
-                      aria-label={t('taskList.delete')}
-                    >
-                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth={2}
-                          d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
-                        />
-                      </svg>
-                    </button>
+                    {/* 編集中でない場合のみボタンを表示 */}
+                    {editingTaskListId !== taskList.id && (
+                      <>
+                        {/* 背景色設定ボタン */}
+                        <button
+                          ref={(el) => {
+                            colorButtonRefs.current[taskList.id] = el;
+                          }}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleColorButtonClick(taskList.id);
+                          }}
+                          className="p-1 rounded text-gray-400 hover:text-blue-600 dark:hover:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/20 opacity-0 group-hover:opacity-100 transition-opacity"
+                          title={t('taskList.setColor')}
+                          aria-label={t('taskList.setColor')}
+                        >
+                          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              strokeWidth={2}
+                              d="M7 21a4 4 0 01-4-4V5a2 2 0 012-2h4a2 2 0 012 2v12a4 4 0 01-4 4zM7 3H5a2 2 0 00-2 2v12a4 4 0 004 4h2a2 2 0 002-2V5a2 2 0 00-2-2z"
+                            />
+                          </svg>
+                        </button>
+                        {/* 削除ボタン */}
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleDeleteTaskList(taskList.id, taskList.name);
+                          }}
+                          className="p-1 rounded text-gray-400 hover:text-red-600 dark:hover:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 opacity-0 group-hover:opacity-100 transition-opacity"
+                          title={t('taskList.delete')}
+                          aria-label={t('taskList.delete')}
+                        >
+                          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              strokeWidth={2}
+                              d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
+                            />
+                          </svg>
+                        </button>
+                      </>
+                    )}
                   </div>
                 </div>
                 {taskList.color !== '#FFFFFF' && (
@@ -282,6 +540,17 @@ const Sidebar: React.FC<{
         onCancel={cancelDeleteTaskList}
         isDestructive={true}
       />
+
+      {/* カラーピッカー */}
+      <ColorPicker
+        isOpen={colorPicker.isOpen}
+        value={taskLists.find(list => list.id === colorPicker.taskListId)?.color || '#FFFFFF'}
+        onChange={handleColorChange}
+        onClose={closeColorPicker}
+        triggerRef={{
+          current: colorButtonRefs.current[colorPicker.taskListId] || null
+        }}
+      />
     </div>
   );
 };
@@ -289,13 +558,23 @@ const Sidebar: React.FC<{
 // メインコンテンツコンポーネント
 const MainContent: React.FC = () => {
   const { t } = useTranslation('common');
-  const { currentTasks, currentTaskListId, taskLists, createTask, toggleTask, deleteTask, error } = useTaskList();
+  const { currentTasks, currentTaskListId, taskLists, createTask, toggleTask, deleteTask, updateTask, error } = useTaskList();
   const { showSuccess, showError, showInfo } = useToast();
   const [newTaskContent, setNewTaskContent] = useState('');
   const [showShareDialog, setShowShareDialog] = useState(false);
   const [shareUrl, setShareUrl] = useState('');
   const [isEditingTaskListName, setIsEditingTaskListName] = useState(false);
   const [editingTaskListName, setEditingTaskListName] = useState('');
+  const [editingTaskId, setEditingTaskId] = useState<string | null>(null);
+  const [editingTaskContent, setEditingTaskContent] = useState('');
+  const [datePicker, setDatePicker] = useState<{
+    isOpen: boolean;
+    taskId: string;
+  }>({
+    isOpen: false,
+    taskId: '',
+  });
+  const dateButtonRefs = useRef<{ [key: string]: HTMLButtonElement | null }>({});
 
   const currentTaskList = taskLists.find(list => list.id === currentTaskListId);
 
@@ -305,6 +584,59 @@ const MainContent: React.FC = () => {
     
     await createTask(newTaskContent.trim());
     setNewTaskContent('');
+  };
+
+  // タスク編集関連のハンドラー
+  const handleEditTask = (taskId: string, currentContent: string) => {
+    setEditingTaskId(taskId);
+    setEditingTaskContent(currentContent);
+  };
+
+  const handleSaveTask = async () => {
+    if (!editingTaskId) return;
+    
+    const trimmedContent = editingTaskContent.trim();
+    if (!trimmedContent) {
+      setEditingTaskId(null);
+      setEditingTaskContent('');
+      return;
+    }
+
+    try {
+      await updateTask(editingTaskId, { content: trimmedContent });
+      showSuccess(t('task.nameUpdated'));
+      setEditingTaskId(null);
+      setEditingTaskContent('');
+    } catch (err) {
+      showError(err instanceof Error ? err.message : t('task.nameUpdateFailed'));
+    }
+  };
+
+  const handleCancelEditTask = () => {
+    setEditingTaskId(null);
+    setEditingTaskContent('');
+  };
+
+  // 日付ピッカー関連のハンドラー
+  const handleDateButtonClick = (taskId: string) => {
+    setDatePicker({
+      isOpen: true,
+      taskId,
+    });
+  };
+
+  const handleDateChange = async (date: Date | null) => {
+    try {
+      await updateTask(datePicker.taskId, { dueDate: date });
+      showSuccess(date ? t('task.dueDateSet') : t('task.dueDateRemoved'));
+      setDatePicker({ isOpen: false, taskId: '' });
+    } catch (err) {
+      showError(err instanceof Error ? err.message : t('task.dueDateUpdateFailed'));
+    }
+  };
+
+  const closeDatePicker = () => {
+    setDatePicker({ isOpen: false, taskId: '' });
   };
 
   if (!currentTaskListId) {
@@ -429,7 +761,7 @@ const MainContent: React.FC = () => {
           {currentTasks.map((task) => (
             <div
               key={task.id}
-              className="flex items-center gap-3 p-4 bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700"
+              className="flex items-center gap-3 p-4 bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 group"
             >
               <input
                 type="checkbox"
@@ -437,24 +769,85 @@ const MainContent: React.FC = () => {
                 onChange={() => toggleTask(task.id)}
                 className="w-5 h-5 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500"
               />
-              <span className={`flex-1 ${
-                task.completed 
-                  ? 'line-through text-gray-500 dark:text-gray-400' 
-                  : 'text-gray-900 dark:text-white'
-              }`}>
-                {task.content}
-              </span>
+              
+              {editingTaskId === task.id ? (
+                <div className="flex-1">
+                  <form
+                    onSubmit={(e) => {
+                      e.preventDefault();
+                      handleSaveTask();
+                    }}
+                    className="flex items-center gap-2"
+                  >
+                    <input
+                      type="text"
+                      value={editingTaskContent}
+                      onChange={(e) => setEditingTaskContent(e.target.value)}
+                      onBlur={handleSaveTask}
+                      onKeyDown={(e) => {
+                        if (e.key === 'Escape') {
+                          handleCancelEditTask();
+                        }
+                      }}
+                      className="flex-1 px-2 py-1 text-sm border border-blue-500 rounded bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      autoFocus
+                    />
+                  </form>
+                </div>
+              ) : (
+                <span 
+                  className={`flex-1 cursor-pointer hover:text-blue-600 dark:hover:text-blue-400 transition-colors ${
+                    task.completed 
+                      ? 'line-through text-gray-500 dark:text-gray-400' 
+                      : 'text-gray-900 dark:text-white'
+                  }`}
+                  onDoubleClick={() => handleEditTask(task.id, task.content)}
+                  title={t('task.doubleClickToEdit')}
+                >
+                  {task.content}
+                </span>
+              )}
+              
               {task.dueDate && (
-                <span className="text-sm text-gray-500 dark:text-gray-400">
+                <span className={`text-sm px-2 py-1 rounded ${
+                  new Date(task.dueDate) < new Date() && !task.completed
+                    ? 'bg-red-100 dark:bg-red-900 text-red-700 dark:text-red-300'
+                    : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300'
+                }`}>
                   {new Date(task.dueDate).toLocaleDateString()}
                 </span>
               )}
-              <button
-                onClick={() => deleteTask(task.id)}
-                className="text-red-500 hover:text-red-700 dark:text-red-400 dark:hover:text-red-300"
-              >
-                {t('common.delete')}
-              </button>
+              
+              {editingTaskId !== task.id && (
+                <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                  {/* 日付設定ボタン */}
+                  <button
+                    ref={(el) => {
+                      dateButtonRefs.current[task.id] = el;
+                    }}
+                    onClick={() => handleDateButtonClick(task.id)}
+                    className="p-1 rounded text-gray-400 hover:text-blue-600 dark:hover:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/20"
+                    title={t('datePicker.setDueDate')}
+                    aria-label={t('datePicker.setDueDate')}
+                  >
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                    </svg>
+                  </button>
+                  
+                  {/* 削除ボタン */}
+                  <button
+                    onClick={() => deleteTask(task.id)}
+                    className="p-1 rounded text-gray-400 hover:text-red-600 dark:hover:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20"
+                    title={t('common.delete')}
+                    aria-label={t('common.delete')}
+                  >
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                    </svg>
+                  </button>
+                </div>
+              )}
             </div>
           ))}
         </div>
@@ -506,6 +899,17 @@ const MainContent: React.FC = () => {
           </div>
         </div>
       )}
+
+      {/* 日付ピッカー */}
+      <DatePicker
+        isOpen={datePicker.isOpen}
+        value={currentTasks.find(task => task.id === datePicker.taskId)?.dueDate ? new Date(currentTasks.find(task => task.id === datePicker.taskId)!.dueDate!) : null}
+        onChange={handleDateChange}
+        onClose={closeDatePicker}
+        triggerRef={{
+          current: dateButtonRefs.current[datePicker.taskId] || null
+        }}
+      />
     </div>
   );
 };

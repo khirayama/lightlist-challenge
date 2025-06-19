@@ -121,12 +121,26 @@
     "confirmDeleteTitle": "タスクリストを削除",
     "confirmDeleteMessage": "「{{name}}」を削除しますか？この操作は取り消せません。",
     "deleteSuccess": "「{{name}}」を削除しました",
-    "deleteFailed": "タスクリストの削除に失敗しました"
+    "deleteFailed": "タスクリストの削除に失敗しました",
+    "setColor": "背景色を設定",
+    "colorUpdated": "背景色を更新しました",
+    "colorUpdateFailed": "背景色の更新に失敗しました",
+    "duplicateName": "同じ名前のタスクリストが既に存在します",
+    "nameUpdateFailed": "タスクリスト名の更新に失敗しました",
+    "dragToReorder": "ドラッグして並び替え",
+    "sortSuccess": "並び替えが完了しました",
+    "sortFailed": "並び替えに失敗しました"
   },
   "task": {
     "inputPlaceholder": "新しいタスクを入力...",
     "add": "追加",
-    "emptyMessage": "まだタスクがありません。上記のフォームから新しいタスクを追加してください。"
+    "emptyMessage": "まだタスクがありません。上記のフォームから新しいタスクを追加してください。",
+    "doubleClickToEdit": "ダブルクリックで編集",
+    "nameUpdated": "タスク名を更新しました",
+    "nameUpdateFailed": "タスク名の更新に失敗しました",
+    "dueDateSet": "期限を設定しました",
+    "dueDateRemoved": "期限を削除しました",
+    "dueDateUpdateFailed": "期限の更新に失敗しました"
   },
   "share": {
     "dialogTitle": "タスクリストを共有",
@@ -146,5 +160,19 @@
     "loginToJoin": "ログインして参加",
     "joinSuccess": "タスクリストに参加しました",
     "joinError": "タスクリストへの参加に失敗しました"
+  },
+  "colorPicker": {
+    "title": "背景色を選択",
+    "selectColor": "色を選択",
+    "customColor": "カスタムカラー"
+  },
+  "datePicker": {
+    "title": "日付を選択",
+    "today": "今日",
+    "clear": "削除",
+    "prevMonth": "前の月",
+    "nextMonth": "次の月",
+    "setDueDate": "期限を設定",
+    "removeDueDate": "期限を削除"
   }
 }

@@ -121,12 +121,26 @@
     "confirmDeleteTitle": "Delete Task List",
     "confirmDeleteMessage": "Delete \"{{name}}\"? This action cannot be undone.",
     "deleteSuccess": "\"{{name}}\" has been deleted",
-    "deleteFailed": "Failed to delete task list"
+    "deleteFailed": "Failed to delete task list",
+    "setColor": "Set background color",
+    "colorUpdated": "Background color updated",
+    "colorUpdateFailed": "Failed to update background color",
+    "duplicateName": "A task list with this name already exists",
+    "nameUpdateFailed": "Failed to update task list name",
+    "dragToReorder": "Drag to reorder",
+    "sortSuccess": "Sorting completed",
+    "sortFailed": "Failed to sort"
   },
   "task": {
     "inputPlaceholder": "Enter a new task...",
     "add": "Add",
-    "emptyMessage": "No tasks yet. Add a new task using the form above."
+    "emptyMessage": "No tasks yet. Add a new task using the form above.",
+    "doubleClickToEdit": "Double-click to edit",
+    "nameUpdated": "Task name updated",
+    "nameUpdateFailed": "Failed to update task name",
+    "dueDateSet": "Due date set",
+    "dueDateRemoved": "Due date removed",
+    "dueDateUpdateFailed": "Failed to update due date"
   },
   "share": {
     "dialogTitle": "Share Task List",
@@ -146,5 +160,19 @@
     "loginToJoin": "Login to Join",
     "joinSuccess": "Successfully joined task list",
     "joinError": "Failed to join task list"
+  },
+  "colorPicker": {
+    "title": "Select Background Color",
+    "selectColor": "Select color",
+    "customColor": "Custom Color"
+  },
+  "datePicker": {
+    "title": "Select Date",
+    "today": "Today",
+    "clear": "Clear",
+    "prevMonth": "Previous month",
+    "nextMonth": "Next month",
+    "setDueDate": "Set due date",
+    "removeDueDate": "Remove due date"
   }
 }

@@ -1,8 +1,10 @@
 'use client';
 
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
-import { TaskList, Task, CreateTaskListRequest, CreateTaskRequest } from '@/lib/types/task-list';
+import { TaskList, Task, CreateTaskListRequest, CreateTaskRequest, UpdateTaskListRequest } from '@/lib/types/task-list';
 import { taskListService } from '@/lib/task-list';
+import { parseTaskContent } from '@/lib/utils/dateParser';
+import { useTranslation } from 'react-i18next';
 
 interface TaskListContextType {
   taskLists: TaskList[];
@@ -15,10 +17,12 @@ interface TaskListContextType {
   fetchTaskLists: () => Promise<void>;
   createTaskList: (request: CreateTaskListRequest) => Promise<void>;
   selectTaskList: (taskListId: string) => Promise<void>;
+  updateTaskList: (taskListId: string, request: UpdateTaskListRequest) => Promise<void>;
   deleteTaskList: (taskListId: string) => Promise<void>;
   
   // Task operations
   createTask: (content: string) => Promise<void>;
+  updateTask: (taskId: string, updates: { content?: string; dueDate?: Date | null }) => Promise<void>;
   toggleTask: (taskId: string) => Promise<void>;
   deleteTask: (taskId: string) => Promise<void>;
 }
@@ -38,6 +42,7 @@ interface TaskListProviderProps {
 }
 
 export const TaskListProvider: React.FC<TaskListProviderProps> = ({ children }) => {
+  const { i18n } = useTranslation();
   const [taskLists, setTaskLists] = useState<TaskList[]>([]);
   const [currentTaskListId, setCurrentTaskListId] = useState<string | null>(null);
   const [currentTasks, setCurrentTasks] = useState<Task[]>([]);
@@ -95,7 +100,18 @@ export const TaskListProvider: React.FC<TaskListProviderProps> = ({ children }) 
     
     try {
       setError(null);
-      const newTask = await taskListService.createTask(currentTaskListId, { content });
+      
+      // 日付の自動解析
+      const parsedTask = parseTaskContent(content, i18n.language);
+      const taskRequest: CreateTaskRequest = {
+        content: parsedTask.content || content // 解析後のコンテンツがない場合は元のコンテンツを使用
+      };
+      
+      if (parsedTask.dueDate) {
+        taskRequest.dueDate = parsedTask.dueDate.toISOString();
+      }
+      
+      const newTask = await taskListService.createTask(currentTaskListId, taskRequest);
       setCurrentTasks(prev => [newTask, ...prev]);
       
       // タスクリストのタスク数を更新
@@ -106,6 +122,30 @@ export const TaskListProvider: React.FC<TaskListProviderProps> = ({ children }) 
       ));
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to create task');
+    }
+  };
+
+  const updateTask = async (taskId: string, updates: { content?: string; dueDate?: Date | null }) => {
+    try {
+      setError(null);
+      const updateRequest: any = {};
+      
+      if (updates.content !== undefined) {
+        updateRequest.content = updates.content;
+      }
+      
+      if (updates.dueDate !== undefined) {
+        updateRequest.dueDate = updates.dueDate ? updates.dueDate.toISOString() : null;
+      }
+      
+      const updatedTask = await taskListService.updateTask(taskId, updateRequest);
+      
+      setCurrentTasks(prev => prev.map(t => 
+        t.id === taskId ? updatedTask : t
+      ));
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to update task');
+      throw err; // 呼び出し元でエラーハンドリングできるように
     }
   };
 
@@ -164,6 +204,20 @@ export const TaskListProvider: React.FC<TaskListProviderProps> = ({ children }) 
     }
   };
 
+  const updateTaskList = async (taskListId: string, request: UpdateTaskListRequest) => {
+    try {
+      setError(null);
+      const updatedTaskList = await taskListService.updateTaskList(taskListId, request);
+      
+      // タスクリストを更新
+      setTaskLists(prev => prev.map(list => 
+        list.id === taskListId ? updatedTaskList : list
+      ));
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to update task list');
+    }
+  };
+
   const deleteTaskList = async (taskListId: string) => {
     try {
       setError(null);
@@ -212,8 +266,10 @@ export const TaskListProvider: React.FC<TaskListProviderProps> = ({ children }) 
     fetchTaskLists,
     createTaskList,
     selectTaskList,
+    updateTaskList,
     deleteTaskList,
     createTask,
+    updateTask,
     toggleTask,
     deleteTask,
   };
