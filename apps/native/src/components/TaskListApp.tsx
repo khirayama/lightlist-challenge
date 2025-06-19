@@ -5,7 +5,6 @@ import {
   ScrollView,
   TouchableOpacity,
   TextInput,
-  StyleSheet,
   Alert,
   ActivityIndicator,
   Dimensions,
@@ -16,7 +15,8 @@ import { useRouter } from 'expo-router';
 import { useTheme } from '../contexts/ThemeContext';
 import { useAuth } from '../contexts/AuthContext';
 import { TaskListProvider, useTaskList } from '../contexts/TaskListContext';
-import { formatDueDate } from '../lib/dateParser';
+import { formatDueDate, parseDateFromText } from '../lib/dateParser';
+import { createTaskListStyles } from '../styles/taskList';
 
 // サイドバーコンポーネント
 interface SidebarProps {
@@ -39,6 +39,7 @@ const Sidebar: React.FC<SidebarProps> = ({ isDrawer = false, isVisible = true, o
   const [isCreating, setIsCreating] = useState(false);
 
   const isDark = resolvedTheme === 'dark';
+  const styles = createTaskListStyles(isDark);
 
   const handleCreateTaskList = async () => {
     const trimmedName = newTaskListName.trim();
@@ -112,19 +113,16 @@ const Sidebar: React.FC<SidebarProps> = ({ isDrawer = false, isVisible = true, o
 
   const sidebarContent = (
     <View style={[
-      isDrawer ? styles.drawerSidebar : [styles.sidebar, { width }], 
-      isDark ? styles.sidebarDark : styles.sidebarLight
+      isDrawer ? styles.drawerSidebar : [styles.sidebar, { width }]
     ]}>
       {/* ヘッダー */}
       <View style={[
-        styles.sidebarHeader, 
-        isDark ? styles.sidebarHeaderDark : styles.sidebarHeaderLight,
+        styles.sidebarHeader,
         responsiveStyles && { padding: responsiveStyles.headerPadding }
       ]}>
         <View style={styles.headerRow}>
           <Text style={[
-            styles.appTitle, 
-            isDark ? styles.textWhite : styles.textBlack,
+            styles.appTitle,
             responsiveStyles && { fontSize: responsiveStyles.fontSize.title }
           ]}>
             Lightlist
@@ -132,9 +130,9 @@ const Sidebar: React.FC<SidebarProps> = ({ isDrawer = false, isVisible = true, o
           <View style={styles.headerButtons}>
             <TouchableOpacity
               onPress={() => router.push('/settings')}
-              style={[styles.headerButton, isDark ? styles.headerButtonDark : styles.headerButtonLight]}
+              style={[styles.headerButton]}
             >
-              <Text style={[styles.headerButtonText, isDark ? styles.textGray300 : styles.textGray700]}>
+              <Text style={[styles.headerButtonText]}>
                 {t('settings.title')}
               </Text>
             </TouchableOpacity>
@@ -153,7 +151,7 @@ const Sidebar: React.FC<SidebarProps> = ({ isDrawer = false, isVisible = true, o
       {/* タスクリスト一覧 */}
       <ScrollView style={styles.sidebarContent}>
         <View style={styles.sectionHeader}>
-          <Text style={[styles.sectionTitle, isDark ? styles.textWhite : styles.textBlack]}>
+          <Text style={[styles.sectionTitle]}>
             {t('taskList.title')}
           </Text>
           <TouchableOpacity
@@ -166,7 +164,7 @@ const Sidebar: React.FC<SidebarProps> = ({ isDrawer = false, isVisible = true, o
 
         {/* 作成フォーム */}
         {showCreateForm && (
-          <View style={[styles.createForm, isDark ? styles.createFormDark : styles.createFormLight]}>
+          <View style={[styles.createForm]}>
             <View style={styles.createInputContainer}>
               <TextInput
                 value={newTaskListName}
@@ -177,8 +175,7 @@ const Sidebar: React.FC<SidebarProps> = ({ isDrawer = false, isVisible = true, o
                 placeholder={t('taskList.enterName')}
                 placeholderTextColor={isDark ? '#9CA3AF' : '#6B7280'}
                 style={[
-                  styles.createInput, 
-                  isDark ? styles.createInputDark : styles.createInputLight,
+                  styles.createInput,
                   createError ? styles.createInputError : null
                 ]}
                 maxLength={50}
@@ -188,11 +185,11 @@ const Sidebar: React.FC<SidebarProps> = ({ isDrawer = false, isVisible = true, o
                 blurOnSubmit={false}
               />
               <View style={styles.createInputMeta}>
-                <Text style={[styles.characterCount, isDark ? styles.textGray400 : styles.textGray500]}>
+                <Text style={[styles.characterCount]}>
                   {newTaskListName.length}/50
                 </Text>
                 {createError && (
-                  <Text style={[styles.errorText, isDark ? styles.errorTextDark : styles.errorTextLight]}>
+                  <Text style={[styles.errorText]}>
                     {createError}
                   </Text>
                 )}
@@ -240,17 +237,14 @@ const Sidebar: React.FC<SidebarProps> = ({ isDrawer = false, isVisible = true, o
               onPress={() => handleSelectTaskList(taskList.id)}
               style={[
                 styles.taskListItem,
-                currentTaskListId === taskList.id
-                  ? isDark ? styles.taskListItemActiveDark : styles.taskListItemActiveLight
-                  : isDark ? styles.taskListItemDark : styles.taskListItemLight,
-                currentTaskListId === taskList.id && styles.taskListItemBorder,
+                currentTaskListId === taskList.id && styles.taskListItemActive,
               ]}
             >
               <View style={styles.taskListItemContent}>
-                <Text style={[styles.taskListName, isDark ? styles.textWhite : styles.textBlack]}>
+                <Text style={[styles.taskListName]}>
                   {taskList.name}
                 </Text>
-                <Text style={[styles.taskListStats, isDark ? styles.textGray400 : styles.textGray500]}>
+                <Text style={[styles.taskListStats]}>
                   {taskList.completedCount}/{taskList.taskCount}
                 </Text>
               </View>
@@ -266,7 +260,7 @@ const Sidebar: React.FC<SidebarProps> = ({ isDrawer = false, isVisible = true, o
         {isLoading && (
           <View style={styles.loadingContainer}>
             <ActivityIndicator size="small" color={isDark ? '#FFFFFF' : '#000000'} />
-            <Text style={[styles.loadingText, isDark ? styles.textGray400 : styles.textGray500]}>
+            <Text style={[styles.loadingText]}>
               {t('common.loading')}
             </Text>
           </View>
@@ -286,10 +280,10 @@ const Sidebar: React.FC<SidebarProps> = ({ isDrawer = false, isVisible = true, o
         {sidebarContent}
         {/* ドロワー用のクローズボタン */}
         <TouchableOpacity
-          style={[styles.drawerCloseButton, isDark ? styles.drawerCloseButtonDark : styles.drawerCloseButtonLight]}
+          style={[styles.drawerCloseButton]}
           onPress={onClose}
         >
-          <Text style={[styles.drawerCloseButtonText, isDark ? styles.textWhite : styles.textBlack]}>
+          <Text style={[styles.drawerCloseButtonText]}>
             {t('common.close')}
           </Text>
         </TouchableOpacity>
@@ -318,6 +312,7 @@ const MainContent: React.FC<MainContentProps> = ({ showDrawerButton = false, onO
   const [deletedTask, setDeletedTask] = useState<{task: any, timeoutId: NodeJS.Timeout} | null>(null);
 
   const isDark = resolvedTheme === 'dark';
+  const styles = createTaskListStyles(isDark);
   const currentTaskList = taskLists.find(list => list.id === currentTaskListId);
 
   // タスクを表示順序でソート
@@ -413,24 +408,24 @@ const MainContent: React.FC<MainContentProps> = ({ showDrawerButton = false, onO
 
   if (!currentTaskListId) {
     return (
-      <View style={[styles.mainContent, isDark ? styles.mainContentDark : styles.mainContentLight]}>
+      <View style={[styles.mainContent]}>
         {showDrawerButton && (
-          <View style={[styles.mainHeader, isDark ? styles.mainHeaderDark : styles.mainHeaderLight]}>
+          <View style={[styles.mainHeader]}>
             <TouchableOpacity
-              style={[styles.drawerButton, isDark ? styles.drawerButtonDark : styles.drawerButtonLight]}
+              style={[styles.drawerButton]}
               onPress={onOpenDrawer}
             >
-              <Text style={[styles.drawerButtonText, isDark ? styles.textWhite : styles.textBlack]}>
+              <Text style={[styles.drawerButtonText]}>
                 ☰
               </Text>
             </TouchableOpacity>
-            <Text style={[styles.mainTitle, isDark ? styles.textWhite : styles.textBlack]}>
+            <Text style={[styles.mainTitle]}>
               Lightlist
             </Text>
           </View>
         )}
         <View style={styles.centered}>
-          <Text style={[styles.emptyStateText, isDark ? styles.textGray400 : styles.textGray500]}>
+          <Text style={[styles.emptyStateText]}>
             {t('taskList.selectPrompt')}
           </Text>
         </View>
@@ -439,31 +434,29 @@ const MainContent: React.FC<MainContentProps> = ({ showDrawerButton = false, onO
   }
 
   return (
-    <View style={[styles.mainContent, isDark ? styles.mainContentDark : styles.mainContentLight]}>
+    <View style={[styles.mainContent]}>
       {/* ヘッダー */}
-      <View style={[styles.mainHeader, isDark ? styles.mainHeaderDark : styles.mainHeaderLight]}>
+      <View style={[styles.mainHeader]}>
         <View style={styles.mainHeaderContent}>
           {showDrawerButton && (
             <TouchableOpacity
-              style={[styles.drawerButton, isDark ? styles.drawerButtonDark : styles.drawerButtonLight]}
+              style={[styles.drawerButton]}
               onPress={onOpenDrawer}
             >
-              <Text style={[styles.drawerButtonText, isDark ? styles.textWhite : styles.textBlack]}>
+              <Text style={[styles.drawerButtonText]}>
                 ☰
               </Text>
             </TouchableOpacity>
           )}
           <View style={styles.mainTitleContainer}>
             <Text style={[
-              styles.mainTitle, 
-              isDark ? styles.textWhite : styles.textBlack,
+              styles.mainTitle,
               responsiveStyles && { fontSize: responsiveStyles.fontSize.title }
             ]}>
               {currentTaskList?.name}
             </Text>
             <Text style={[
-              styles.mainSubtitle, 
-              isDark ? styles.textGray400 : styles.textGray500,
+              styles.mainSubtitle,
               responsiveStyles && { fontSize: responsiveStyles.fontSize.subtitle }
             ]}>
               {sortedTasks.length > 0 
@@ -479,10 +472,10 @@ const MainContent: React.FC<MainContentProps> = ({ showDrawerButton = false, onO
           {sortedTasks.length > 1 && (
             <TouchableOpacity
               onPress={() => setSortMode(prev => prev === 'auto' ? 'manual' : 'auto')}
-              style={[styles.sortButton, isDark ? styles.sortButtonDark : styles.sortButtonLight]}
+              style={[styles.sortButton]}
               accessibilityLabel={sortMode === 'auto' ? t('task.switchToManualSort') : t('task.switchToAutoSort')}
             >
-              <Text style={[styles.sortButtonText, isDark ? styles.textWhite : styles.textBlack]}>
+              <Text style={[styles.sortButtonText]}>
                 {sortMode === 'auto' ? '📶' : '🔀'}
               </Text>
             </TouchableOpacity>
@@ -492,8 +485,8 @@ const MainContent: React.FC<MainContentProps> = ({ showDrawerButton = false, onO
 
       {/* エラー表示 */}
       {error && (
-        <View style={[styles.errorContainer, isDark ? styles.errorContainerDark : styles.errorContainerLight]}>
-          <Text style={[styles.errorText, isDark ? styles.errorTextDark : styles.errorTextLight]}>
+        <View style={[styles.errorContainer]}>
+          <Text style={[styles.errorText]}>
             {error}
           </Text>
         </View>
@@ -508,8 +501,7 @@ const MainContent: React.FC<MainContentProps> = ({ showDrawerButton = false, onO
             placeholder={t('task.enterNew')}
             placeholderTextColor={isDark ? '#9CA3AF' : '#6B7280'}
             style={[
-              styles.addTaskInput, 
-              isDark ? styles.addTaskInputDark : styles.addTaskInputLight,
+              styles.addTaskInput,
               responsiveStyles && { fontSize: responsiveStyles.fontSize.button }
             ]}
             returnKeyType="done"
@@ -532,7 +524,7 @@ const MainContent: React.FC<MainContentProps> = ({ showDrawerButton = false, onO
           {sortedTasks.map((task) => (
             <View
               key={task.id}
-              style={[styles.taskItem, isDark ? styles.taskItemDark : styles.taskItemLight]}
+              style={[styles.taskItem]}
             >
               <TouchableOpacity
                 onPress={() => toggleTask(task.id)}
@@ -545,7 +537,6 @@ const MainContent: React.FC<MainContentProps> = ({ showDrawerButton = false, onO
                 <View style={[
                   styles.checkbox,
                   task.completed && styles.checkboxChecked,
-                  isDark ? styles.checkboxDark : styles.checkboxLight,
                 ]}>
                   {task.completed && (
                     <Text style={styles.checkboxText}>✓</Text>
@@ -558,7 +549,6 @@ const MainContent: React.FC<MainContentProps> = ({ showDrawerButton = false, onO
                   onChangeText={setEditingContent}
                   style={[
                     styles.taskEditInput,
-                    isDark ? styles.taskEditInputDark : styles.taskEditInputLight,
                   ]}
                   onBlur={handleSaveEdit}
                   onSubmitEditing={handleSaveEdit}
@@ -569,8 +559,6 @@ const MainContent: React.FC<MainContentProps> = ({ showDrawerButton = false, onO
                   <Text style={[
                     styles.taskContent,
                     task.completed && styles.taskContentCompleted,
-                    isDark ? styles.textWhite : styles.textBlack,
-                    task.completed && (isDark ? styles.textGray400 : styles.textGray500),
                   ]}>
                     {task.content}
                   </Text>
@@ -589,7 +577,7 @@ const MainContent: React.FC<MainContentProps> = ({ showDrawerButton = false, onO
                   style={styles.dueDateContainer}
                   accessibilityLabel={t('task.clearDueDate')}
                 >
-                  <Text style={[styles.taskDueDate, isDark ? styles.textGray400 : styles.textGray500]}>
+                  <Text style={[styles.taskDueDate]}>
                     {formatDueDate(new Date(task.dueDate), i18n.language)}
                   </Text>
                 </TouchableOpacity>
@@ -607,7 +595,7 @@ const MainContent: React.FC<MainContentProps> = ({ showDrawerButton = false, onO
 
         {sortedTasks.length === 0 && (
           <View style={styles.emptyTasksContainer}>
-            <Text style={[styles.emptyTasksText, isDark ? styles.textGray400 : styles.textGray500]}>
+            <Text style={[styles.emptyTasksText]}>
               {t('task.emptyMessage')}
             </Text>
           </View>
@@ -616,8 +604,8 @@ const MainContent: React.FC<MainContentProps> = ({ showDrawerButton = false, onO
 
       {/* 削除取り消しバー */}
       {deletedTask && (
-        <View style={[styles.undoBar, isDark ? styles.undoBarDark : styles.undoBarLight]}>
-          <Text style={[styles.undoText, isDark ? styles.textWhite : styles.textBlack]}>
+        <View style={[styles.undoBar]}>
+          <Text style={[styles.undoText]}>
             {t('task.deletedMessage', { taskContent: deletedTask.task.content })}
           </Text>
           <TouchableOpacity onPress={handleUndoDelete} style={styles.undoButton}>
@@ -633,6 +621,10 @@ const MainContent: React.FC<MainContentProps> = ({ showDrawerButton = false, onO
 const TaskListApp: React.FC = () => {
   const [screenData, setScreenData] = useState(Dimensions.get('window'));
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
+  const { resolvedTheme } = useTheme();
+  
+  const isDark = resolvedTheme === 'dark';
+  const styles = createTaskListStyles(isDark);
 
   // 画面サイズ変更の監視
   useEffect(() => {
@@ -705,551 +697,5 @@ const TaskListApp: React.FC = () => {
     </TaskListProvider>
   );
 };
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    flexDirection: 'row',
-  },
-  sidebar: {
-    width: 320,
-    borderRightWidth: 1,
-  },
-  sidebarLight: {
-    backgroundColor: '#FFFFFF',
-    borderRightColor: '#E5E7EB',
-  },
-  sidebarDark: {
-    backgroundColor: '#1F2937',
-    borderRightColor: '#374151',
-  },
-  sidebarHeader: {
-    padding: 16,
-    borderBottomWidth: 1,
-  },
-  sidebarHeaderLight: {
-    borderBottomColor: '#E5E7EB',
-  },
-  sidebarHeaderDark: {
-    borderBottomColor: '#374151',
-  },
-  headerRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: 16,
-  },
-  appTitle: {
-    fontSize: 20,
-    fontWeight: 'bold',
-  },
-  headerButtons: {
-    flexDirection: 'row',
-    gap: 8,
-  },
-  headerButton: {
-    paddingVertical: 4,
-    paddingHorizontal: 12,
-    borderRadius: 4,
-  },
-  headerButtonLight: {
-    backgroundColor: '#F3F4F6',
-  },
-  headerButtonDark: {
-    backgroundColor: '#374151',
-  },
-  headerButtonDanger: {
-    backgroundColor: '#FEF2F2',
-  },
-  headerButtonText: {
-    fontSize: 12,
-  },
-  headerButtonTextDanger: {
-    fontSize: 12,
-    color: '#DC2626',
-  },
-  sidebarContent: {
-    flex: 1,
-    padding: 16,
-  },
-  sectionHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: 16,
-  },
-  sectionTitle: {
-    fontSize: 18,
-    fontWeight: '600',
-  },
-  addButton: {
-    backgroundColor: '#3B82F6',
-    paddingVertical: 4,
-    paddingHorizontal: 12,
-    borderRadius: 4,
-  },
-  addButtonText: {
-    color: '#FFFFFF',
-    fontSize: 12,
-  },
-  createForm: {
-    padding: 12,
-    borderRadius: 8,
-    marginBottom: 16,
-  },
-  createFormLight: {
-    backgroundColor: '#F9FAFB',
-  },
-  createFormDark: {
-    backgroundColor: '#374151',
-  },
-  createInputContainer: {
-    marginBottom: 12,
-  },
-  createInput: {
-    borderWidth: 1,
-    borderRadius: 4,
-    paddingVertical: 8,
-    paddingHorizontal: 12,
-    marginBottom: 4,
-  },
-  createInputLight: {
-    backgroundColor: '#FFFFFF',
-    borderColor: '#D1D5DB',
-    color: '#111827',
-  },
-  createInputDark: {
-    backgroundColor: '#1F2937',
-    borderColor: '#4B5563',
-    color: '#FFFFFF',
-  },
-  createInputError: {
-    borderColor: '#EF4444',
-  },
-  createInputMeta: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-  },
-  characterCount: {
-    fontSize: 10,
-  },
-  errorText: {
-    fontSize: 10,
-  },
-  errorTextLight: {
-    color: '#DC2626',
-  },
-  errorTextDark: {
-    color: '#FCA5A5',
-  },
-  createButtons: {
-    flexDirection: 'row',
-    gap: 8,
-  },
-  createButton: {
-    paddingVertical: 4,
-    paddingHorizontal: 12,
-    borderRadius: 4,
-  },
-  createButtonPrimary: {
-    backgroundColor: '#10B981',
-  },
-  createButtonSecondary: {
-    backgroundColor: '#6B7280',
-  },
-  createButtonDisabled: {
-    opacity: 0.5,
-  },
-  createButtonContent: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 4,
-  },
-  loadingSpinner: {
-    marginRight: 4,
-  },
-  createButtonText: {
-    color: '#FFFFFF',
-    fontSize: 12,
-  },
-  taskListContainer: {
-    gap: 8,
-  },
-  taskListItem: {
-    padding: 12,
-    borderRadius: 8,
-    borderLeftWidth: 4,
-    borderLeftColor: 'transparent',
-  },
-  taskListItemLight: {
-    backgroundColor: '#F9FAFB',
-  },
-  taskListItemDark: {
-    backgroundColor: '#374151',
-  },
-  taskListItemActiveLight: {
-    backgroundColor: '#DBEAFE',
-  },
-  taskListItemActiveDark: {
-    backgroundColor: '#1E3A8A',
-  },
-  taskListItemBorder: {
-    borderLeftColor: '#3B82F6',
-  },
-  taskListItemContent: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-  },
-  taskListName: {
-    fontSize: 14,
-    fontWeight: '500',
-  },
-  taskListStats: {
-    fontSize: 12,
-  },
-  taskListColorBar: {
-    height: 8,
-    borderRadius: 2,
-    marginTop: 8,
-  },
-  loadingContainer: {
-    alignItems: 'center',
-    paddingVertical: 16,
-  },
-  loadingText: {
-    fontSize: 12,
-    marginTop: 8,
-  },
-  mainContent: {
-    flex: 1,
-  },
-  mainContentLight: {
-    backgroundColor: '#F9FAFB',
-  },
-  mainContentDark: {
-    backgroundColor: '#111827',
-  },
-  centered: {
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  mainHeader: {
-    paddingHorizontal: 24,
-    paddingVertical: 24,
-    borderBottomWidth: 1,
-  },
-  mainHeaderLight: {
-    backgroundColor: '#FFFFFF',
-    borderBottomColor: '#E5E7EB',
-  },
-  mainHeaderDark: {
-    backgroundColor: '#1F2937',
-    borderBottomColor: '#374151',
-  },
-  mainTitle: {
-    fontSize: 24,
-    fontWeight: 'bold',
-  },
-  mainSubtitle: {
-    fontSize: 14,
-    marginTop: 4,
-  },
-  errorContainer: {
-    marginHorizontal: 24,
-    marginTop: 16,
-    padding: 12,
-    borderRadius: 8,
-    borderWidth: 1,
-  },
-  errorContainerLight: {
-    backgroundColor: '#FEF2F2',
-    borderColor: '#FECACA',
-  },
-  errorContainerDark: {
-    backgroundColor: '#7F1D1D',
-    borderColor: '#B91C1C',
-  },
-  errorText: {
-    fontSize: 14,
-  },
-  errorTextLight: {
-    color: '#B91C1C',
-  },
-  errorTextDark: {
-    color: '#FCA5A5',
-  },
-  addTaskContainer: {
-    padding: 24,
-  },
-  addTaskForm: {
-    flexDirection: 'row',
-    gap: 12,
-  },
-  addTaskInput: {
-    flex: 1,
-    borderWidth: 1,
-    borderRadius: 8,
-    paddingVertical: 8,
-    paddingHorizontal: 16,
-  },
-  addTaskInputLight: {
-    backgroundColor: '#FFFFFF',
-    borderColor: '#D1D5DB',
-    color: '#111827',
-  },
-  addTaskInputDark: {
-    backgroundColor: '#1F2937',
-    borderColor: '#4B5563',
-    color: '#FFFFFF',
-  },
-  addTaskButton: {
-    backgroundColor: '#3B82F6',
-    paddingVertical: 8,
-    paddingHorizontal: 24,
-    borderRadius: 8,
-  },
-  addTaskButtonDisabled: {
-    opacity: 0.5,
-  },
-  addTaskButtonText: {
-    color: '#FFFFFF',
-    fontWeight: '600',
-  },
-  taskListScroll: {
-    flex: 1,
-    paddingHorizontal: 24,
-    paddingBottom: 24,
-  },
-  taskContainer: {
-    gap: 8,
-  },
-  taskItem: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    padding: 16,
-    borderRadius: 8,
-    borderWidth: 1,
-    gap: 12,
-  },
-  taskItemLight: {
-    backgroundColor: '#FFFFFF',
-    borderColor: '#E5E7EB',
-  },
-  taskItemDark: {
-    backgroundColor: '#1F2937',
-    borderColor: '#374151',
-  },
-  taskCheckbox: {
-    width: 20,
-    height: 20,
-  },
-  checkbox: {
-    width: 20,
-    height: 20,
-    borderRadius: 4,
-    borderWidth: 2,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  checkboxLight: {
-    borderColor: '#D1D5DB',
-  },
-  checkboxDark: {
-    borderColor: '#4B5563',
-  },
-  checkboxChecked: {
-    backgroundColor: '#3B82F6',
-    borderColor: '#3B82F6',
-  },
-  checkboxText: {
-    color: '#FFFFFF',
-    fontSize: 12,
-    fontWeight: 'bold',
-  },
-  taskContentContainer: {
-    flex: 1,
-  },
-  taskContent: {
-    fontSize: 16,
-  },
-  taskContentCompleted: {
-    textDecorationLine: 'line-through',
-  },
-  taskEditInput: {
-    flex: 1,
-    fontSize: 16,
-    borderWidth: 1,
-    borderRadius: 4,
-    paddingVertical: 4,
-    paddingHorizontal: 8,
-  },
-  taskEditInputLight: {
-    backgroundColor: '#FFFFFF',
-    borderColor: '#3B82F6',
-    color: '#111827',
-  },
-  taskEditInputDark: {
-    backgroundColor: '#1F2937',
-    borderColor: '#3B82F6',
-    color: '#FFFFFF',
-  },
-  taskDueDate: {
-    fontSize: 12,
-  },
-  deleteButton: {
-    paddingVertical: 4,
-    paddingHorizontal: 8,
-  },
-  deleteButtonText: {
-    color: '#EF4444',
-    fontSize: 12,
-  },
-  emptyTasksContainer: {
-    alignItems: 'center',
-    paddingVertical: 48,
-  },
-  emptyTasksText: {
-    fontSize: 14,
-    textAlign: 'center',
-  },
-  emptyStateText: {
-    fontSize: 16,
-  },
-  // 共通テキストスタイル
-  textBlack: {
-    color: '#111827',
-  },
-  textWhite: {
-    color: '#FFFFFF',
-  },
-  textGray300: {
-    color: '#D1D5DB',
-  },
-  textGray400: {
-    color: '#9CA3AF',
-  },
-  textGray500: {
-    color: '#6B7280',
-  },
-  textGray700: {
-    color: '#374151',
-  },
-  // ドロワー関連スタイル
-  drawerSidebar: {
-    flex: 1,
-    borderRightWidth: 0,
-  },
-  drawerCloseButton: {
-    position: 'absolute',
-    bottom: 50,
-    right: 20,
-    paddingVertical: 12,
-    paddingHorizontal: 24,
-    borderRadius: 8,
-    borderWidth: 1,
-  },
-  drawerCloseButtonLight: {
-    backgroundColor: '#FFFFFF',
-    borderColor: '#D1D5DB',
-  },
-  drawerCloseButtonDark: {
-    backgroundColor: '#374151',
-    borderColor: '#4B5563',
-  },
-  drawerCloseButtonText: {
-    fontSize: 16,
-    fontWeight: '600',
-  },
-  // ドロワーボタン関連スタイル
-  drawerButton: {
-    width: 40,
-    height: 40,
-    borderRadius: 8,
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginRight: 12,
-  },
-  drawerButtonLight: {
-    backgroundColor: '#F3F4F6',
-  },
-  drawerButtonDark: {
-    backgroundColor: '#374151',
-  },
-  drawerButtonText: {
-    fontSize: 18,
-    fontWeight: 'bold',
-  },
-  // メインヘッダー関連スタイル
-  mainHeaderContent: {
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  mainTitleContainer: {
-    flex: 1,
-  },
-  // ソートボタン関連スタイル
-  sortButton: {
-    width: 36,
-    height: 36,
-    borderRadius: 6,
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginLeft: 8,
-  },
-  sortButtonLight: {
-    backgroundColor: '#F3F4F6',
-  },
-  sortButtonDark: {
-    backgroundColor: '#374151',
-  },
-  sortButtonText: {
-    fontSize: 16,
-  },
-  // 削除取り消しバー関連スタイル
-  undoBar: {
-    position: 'absolute',
-    bottom: 0,
-    left: 0,
-    right: 0,
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    paddingVertical: 12,
-    paddingHorizontal: 16,
-    borderTopWidth: 1,
-  },
-  undoBarLight: {
-    backgroundColor: '#F3F4F6',
-    borderTopColor: '#E5E7EB',
-  },
-  undoBarDark: {
-    backgroundColor: '#374151',
-    borderTopColor: '#4B5563',
-  },
-  undoText: {
-    flex: 1,
-    fontSize: 14,
-    marginRight: 12,
-  },
-  undoButton: {
-    backgroundColor: '#3B82F6',
-    paddingVertical: 6,
-    paddingHorizontal: 12,
-    borderRadius: 4,
-  },
-  undoButtonText: {
-    color: '#FFFFFF',
-    fontSize: 12,
-    fontWeight: '600',
-  },
-  // 日付関連スタイル
-  dueDateContainer: {
-    paddingVertical: 2,
-    paddingHorizontal: 4,
-    borderRadius: 3,
-  },
-});
 
 export default TaskListApp;
