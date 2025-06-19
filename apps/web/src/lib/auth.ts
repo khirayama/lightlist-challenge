@@ -445,6 +445,13 @@ export class AuthService {
       throw error;
     }
   }
+
+  /**
+   * 認証付きfetchメソッドのpublicラッパー
+   */
+  public fetch(url: string, options: RequestInit = {}): Promise<Response> {
+    return this.authenticatedFetch(url, options);
+  }
 }
 
 export const authService = new AuthService();

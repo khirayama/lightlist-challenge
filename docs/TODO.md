@@ -2,56 +2,48 @@
 
 ## 次のタスク
 
-### ✅ 完了済み（共同編集機能の基盤実装）
-
-#### ステップ1: 基本的なデータベーススキーマの追加 ✅
-1. ✅ TaskListテーブルの定義を追加
-2. ✅ Taskテーブルの定義を追加  
-3. ✅ SharedTaskListテーブルの定義を追加
-4. ✅ マイグレーションを実行して基本機能を確認
-
-#### ステップ2: 共同編集用スキーマの追加 ✅
-1. ✅ TaskListDocumentテーブルの定義を追加
-2. ✅ TaskListUpdateテーブルの定義を追加（オプション）
-3. ✅ マイグレーションを実行
-
-#### ステップ3: 基本的なAPIエンドポイントの実装 ✅
-1. ✅ タスクリストCRUD APIの実装
-2. ✅ タスクCRUD APIの実装
-3. ✅ 認証ミドルウェアの確認と調整
-
-#### ステップ4: Yjsライブラリのセットアップ ✅
-1. ✅ Yjsライブラリのインストール
-2. ✅ 基本的なYjsドキュメント管理サービスの作成
-3. ✅ Base64エンコード/デコード処理の実装
-
-#### ステップ5: 共同編集APIエンドポイントの実装 ✅
-1. ✅ GET /api/task-lists/:taskListId/collaborative/full-state の実装
-2. ✅ POST /api/task-lists/:taskListId/collaborative/sync の実装
-3. ✅ 排他制御とトランザクション管理の実装
-
-### 実装された機能
-- **データベーススキーマ**: TaskList、Task、SharedTaskList、TaskListDocument、TaskListUpdateテーブル
-- **CRUD API**: タスクリストとタスクの基本的な作成・読取・更新・削除機能
-- **共同編集API**: Yjsベースの状態同期とリアルタイム編集機能
-- **認証・認可**: JWTベースの認証とリソースへのアクセス制御
-- **データ変換**: Base64エンコード/デコード、日付解析機能
-
-### 動作確認済み
-- ✅ Prismaスキーマの正常性確認
-- ✅ TypeScriptビルドの正常性確認
-- ✅ 全APIエンドポイントの実装完了
-
-## 次以降のタスク
-
-### 共同編集機能の実装
-
-4. **クライアント側共同編集機能の実装**
+1. **クライアント側共同編集機能の実装**
 
    - 共同編集Contextの作成
    - ポーリング機能の実装（5秒間隔）
    - Y.ArrayとY.Mapを使用したタスク管理
    - ローカル変更の検知と送信
+
+   **実装計画（小さなステップ）**:
+   
+   a. **Yjs依存関係の追加**
+      - packages/sdkにYjsパッケージを追加
+      - 型定義の確認と設定
+   
+   b. **共同編集サービスクラスの作成**
+      - packages/sdk/src/services/CollaborativeService.tsを作成
+      - Yjsドキュメントの初期化処理
+      - Base64エンコード/デコード処理
+   
+   c. **API通信メソッドの実装**
+      - fetchFullState: 完全な状態を取得
+      - sync: 差分同期を実行
+      - エラーハンドリングとリトライロジック
+   
+   d. **CollaborativeContextの作成（Web）**
+      - apps/web/src/contexts/CollaborativeContext.tsxを作成
+      - Yjsドキュメントの状態管理
+      - 5秒間隔のポーリング機能
+      - 同期状態（isLoading, isSyncing, lastSyncTime）の管理
+   
+   e. **タスク操作ヘルパー関数の実装**
+      - addTask: Y.Arrayにタスクを追加
+      - updateTask: Y.Mapのタスクを更新
+      - deleteTask: Y.Arrayからタスクを削除
+      - タスクIDの生成関数（clientID-timestamp-random形式）
+   
+   f. **既存UIとの統合準備**
+      - タスクリスト画面でCollaborativeContextを使用する準備
+      - ローカル状態とYjsドキュメントの同期方法の設計
+
+## 次以降のタスク
+
+### 共同編集機能の実装
 
 5. **UI統合とテスト**
    - 既存のタスクリストUIとの統合
