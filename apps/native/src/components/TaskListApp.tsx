@@ -17,22 +17,55 @@ import { TaskListProvider, useTaskList } from '../contexts/TaskListContext';
 
 // サイドバーコンポーネント（タブレット・デスクトップ用）
 const Sidebar: React.FC = () => {
-  const { taskLists, currentTaskListId, selectTaskList, createTaskList, isLoading } = useTaskList();
+  const { taskLists, currentTaskListId, selectTaskList, createTaskList, isLoading, error } = useTaskList();
   const { logout } = useAuth();
   const { resolvedTheme } = useTheme();
   const router = useRouter();
   const { t } = useTranslation();
   const [showCreateForm, setShowCreateForm] = useState(false);
   const [newTaskListName, setNewTaskListName] = useState('');
+  const [createError, setCreateError] = useState<string | null>(null);
+  const [isCreating, setIsCreating] = useState(false);
 
   const isDark = resolvedTheme === 'dark';
 
   const handleCreateTaskList = async () => {
-    if (!newTaskListName.trim()) return;
-    
-    await createTaskList({ name: newTaskListName.trim() });
-    setNewTaskListName('');
+    const trimmedName = newTaskListName.trim();
+    if (!trimmedName) {
+      setCreateError(t('taskList.nameRequired'));
+      return;
+    }
+
+    if (trimmedName.length > 50) {
+      setCreateError(t('taskList.nameTooLong'));
+      return;
+    }
+
+    // 重複チェック
+    if (taskLists.some(list => list.name === trimmedName)) {
+      setCreateError(t('taskList.nameExists'));
+      return;
+    }
+
+    try {
+      setIsCreating(true);
+      setCreateError(null);
+      
+      await createTaskList({ name: trimmedName });
+      setNewTaskListName('');
+      setShowCreateForm(false);
+      setCreateError(null);
+    } catch (err) {
+      setCreateError(err instanceof Error ? err.message : t('taskList.createFailed'));
+    } finally {
+      setIsCreating(false);
+    }
+  };
+
+  const handleCancelCreate = () => {
     setShowCreateForm(false);
+    setNewTaskListName('');
+    setCreateError(null);
   };
 
   const handleLogout = async () => {
@@ -102,28 +135,61 @@ const Sidebar: React.FC = () => {
         {/* 作成フォーム */}
         {showCreateForm && (
           <View style={[styles.createForm, isDark ? styles.createFormDark : styles.createFormLight]}>
-            <TextInput
-              value={newTaskListName}
-              onChangeText={setNewTaskListName}
-              placeholder={t('taskList.enterName')}
-              placeholderTextColor={isDark ? '#9CA3AF' : '#6B7280'}
-              style={[styles.createInput, isDark ? styles.createInputDark : styles.createInputLight]}
-              autoFocus
-            />
+            <View style={styles.createInputContainer}>
+              <TextInput
+                value={newTaskListName}
+                onChangeText={(text) => {
+                  setNewTaskListName(text);
+                  setCreateError(null); // 入力時にエラーをクリア
+                }}
+                placeholder={t('taskList.enterName')}
+                placeholderTextColor={isDark ? '#9CA3AF' : '#6B7280'}
+                style={[
+                  styles.createInput, 
+                  isDark ? styles.createInputDark : styles.createInputLight,
+                  createError ? styles.createInputError : null
+                ]}
+                maxLength={50}
+                autoFocus
+              />
+              <View style={styles.createInputMeta}>
+                <Text style={[styles.characterCount, isDark ? styles.textGray400 : styles.textGray500]}>
+                  {newTaskListName.length}/50
+                </Text>
+                {createError && (
+                  <Text style={[styles.errorText, isDark ? styles.errorTextDark : styles.errorTextLight]}>
+                    {createError}
+                  </Text>
+                )}
+              </View>
+            </View>
             <View style={styles.createButtons}>
               <TouchableOpacity
                 onPress={handleCreateTaskList}
-                disabled={isLoading || !newTaskListName.trim()}
-                style={[styles.createButton, styles.createButtonPrimary]}
+                disabled={isCreating || !newTaskListName.trim()}
+                style={[
+                  styles.createButton, 
+                  styles.createButtonPrimary,
+                  (isCreating || !newTaskListName.trim()) && styles.createButtonDisabled
+                ]}
               >
-                <Text style={styles.createButtonText}>{t('common.create')}</Text>
+                {isCreating ? (
+                  <View style={styles.createButtonContent}>
+                    <ActivityIndicator size="small" color="#FFFFFF" style={styles.loadingSpinner} />
+                    <Text style={styles.createButtonText}>{t('taskList.creating')}</Text>
+                  </View>
+                ) : (
+                  <Text style={styles.createButtonText}>{t('common.create')}</Text>
+                )}
               </TouchableOpacity>
               <TouchableOpacity
-                onPress={() => {
-                  setShowCreateForm(false);
-                  setNewTaskListName('');
-                }}
-                style={[styles.createButton, styles.createButtonSecondary]}
+                onPress={handleCancelCreate}
+                disabled={isCreating}
+                style={[
+                  styles.createButton, 
+                  styles.createButtonSecondary,
+                  isCreating && styles.createButtonDisabled
+                ]}
               >
                 <Text style={styles.createButtonText}>{t('common.cancel')}</Text>
               </TouchableOpacity>
@@ -415,12 +481,15 @@ const styles = StyleSheet.create({
   createFormDark: {
     backgroundColor: '#374151',
   },
+  createInputContainer: {
+    marginBottom: 12,
+  },
   createInput: {
     borderWidth: 1,
     borderRadius: 4,
     paddingVertical: 8,
     paddingHorizontal: 12,
-    marginBottom: 8,
+    marginBottom: 4,
   },
   createInputLight: {
     backgroundColor: '#FFFFFF',
@@ -431,6 +500,26 @@ const styles = StyleSheet.create({
     backgroundColor: '#1F2937',
     borderColor: '#4B5563',
     color: '#FFFFFF',
+  },
+  createInputError: {
+    borderColor: '#EF4444',
+  },
+  createInputMeta: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  characterCount: {
+    fontSize: 10,
+  },
+  errorText: {
+    fontSize: 10,
+  },
+  errorTextLight: {
+    color: '#DC2626',
+  },
+  errorTextDark: {
+    color: '#FCA5A5',
   },
   createButtons: {
     flexDirection: 'row',
@@ -446,6 +535,17 @@ const styles = StyleSheet.create({
   },
   createButtonSecondary: {
     backgroundColor: '#6B7280',
+  },
+  createButtonDisabled: {
+    opacity: 0.5,
+  },
+  createButtonContent: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+  },
+  loadingSpinner: {
+    marginRight: 4,
   },
   createButtonText: {
     color: '#FFFFFF',

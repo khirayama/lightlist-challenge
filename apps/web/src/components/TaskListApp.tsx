@@ -7,18 +7,52 @@ import { TaskListProvider, useTaskList } from '@/contexts/TaskListContext';
 
 // サイドバーコンポーネント
 const Sidebar: React.FC = () => {
-  const { taskLists, currentTaskListId, selectTaskList, createTaskList, isLoading } = useTaskList();
+  const { taskLists, currentTaskListId, selectTaskList, createTaskList, isLoading, error } = useTaskList();
   const { logout } = useAuth();
   const [showCreateForm, setShowCreateForm] = useState(false);
   const [newTaskListName, setNewTaskListName] = useState('');
+  const [createError, setCreateError] = useState<string | null>(null);
+  const [isCreating, setIsCreating] = useState(false);
 
   const handleCreateTaskList = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!newTaskListName.trim()) return;
     
-    await createTaskList({ name: newTaskListName.trim() });
-    setNewTaskListName('');
+    const trimmedName = newTaskListName.trim();
+    if (!trimmedName) {
+      setCreateError('タスクリスト名を入力してください');
+      return;
+    }
+
+    if (trimmedName.length > 50) {
+      setCreateError('タスクリスト名は50文字以下で入力してください');
+      return;
+    }
+
+    // 重複チェック
+    if (taskLists.some(list => list.name === trimmedName)) {
+      setCreateError('同じ名前のタスクリストが既に存在します');
+      return;
+    }
+
+    try {
+      setIsCreating(true);
+      setCreateError(null);
+      
+      await createTaskList({ name: trimmedName });
+      setNewTaskListName('');
+      setShowCreateForm(false);
+      setCreateError(null);
+    } catch (err) {
+      setCreateError(err instanceof Error ? err.message : 'タスクリストの作成に失敗しました');
+    } finally {
+      setIsCreating(false);
+    }
+  };
+
+  const handleCancelCreate = () => {
     setShowCreateForm(false);
+    setNewTaskListName('');
+    setCreateError(null);
   };
 
   const handleLogout = async () => {
@@ -67,29 +101,54 @@ const Sidebar: React.FC = () => {
         {/* 作成フォーム */}
         {showCreateForm && (
           <form onSubmit={handleCreateTaskList} className="mb-4 p-3 bg-gray-50 dark:bg-gray-700 rounded">
-            <input
-              type="text"
-              value={newTaskListName}
-              onChange={(e) => setNewTaskListName(e.target.value)}
-              placeholder="タスクリスト名を入力..."
-              className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded mb-2 bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
-              autoFocus
-            />
+            <div className="mb-3">
+              <input
+                type="text"
+                value={newTaskListName}
+                onChange={(e) => {
+                  setNewTaskListName(e.target.value);
+                  setCreateError(null); // 入力時にエラーをクリア
+                }}
+                placeholder="タスクリスト名を入力..."
+                className={`w-full px-3 py-2 border rounded bg-white dark:bg-gray-800 text-gray-900 dark:text-white ${
+                  createError 
+                    ? 'border-red-500 dark:border-red-400' 
+                    : 'border-gray-300 dark:border-gray-600 focus:border-blue-500 dark:focus:border-blue-400'
+                } focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 focus:ring-opacity-50`}
+                maxLength={50}
+                autoFocus
+              />
+              <div className="flex justify-between items-center mt-1">
+                <span className="text-xs text-gray-500 dark:text-gray-400">
+                  {newTaskListName.length}/50
+                </span>
+                {createError && (
+                  <span className="text-xs text-red-600 dark:text-red-400">
+                    {createError}
+                  </span>
+                )}
+              </div>
+            </div>
             <div className="flex gap-2">
               <button
                 type="submit"
-                disabled={isLoading || !newTaskListName.trim()}
-                className="px-3 py-1 text-sm bg-green-500 text-white rounded hover:bg-green-600 disabled:opacity-50"
+                disabled={isCreating || !newTaskListName.trim()}
+                className="px-3 py-1 text-sm bg-green-500 text-white rounded hover:bg-green-600 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-1"
               >
-                作成
+                {isCreating ? (
+                  <>
+                    <div className="w-3 h-3 border border-white border-t-transparent rounded-full animate-spin"></div>
+                    作成中...
+                  </>
+                ) : (
+                  '作成'
+                )}
               </button>
               <button
                 type="button"
-                onClick={() => {
-                  setShowCreateForm(false);
-                  setNewTaskListName('');
-                }}
-                className="px-3 py-1 text-sm bg-gray-500 text-white rounded hover:bg-gray-600"
+                onClick={handleCancelCreate}
+                disabled={isCreating}
+                className="px-3 py-1 text-sm bg-gray-500 text-white rounded hover:bg-gray-600 disabled:opacity-50"
               >
                 キャンセル
               </button>

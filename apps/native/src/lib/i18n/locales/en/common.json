@@ -77,7 +77,12 @@
     "title": "Task Lists",
     "add": "Add",
     "enterName": "Enter task list name...",
-    "selectPrompt": "Please select a task list"
+    "selectPrompt": "Please select a task list",
+    "nameRequired": "Please enter a task list name",
+    "nameTooLong": "Task list name must be 50 characters or less",
+    "nameExists": "A task list with this name already exists",
+    "createFailed": "Failed to create task list",
+    "creating": "Creating..."
   },
   "task": {
     "enterNew": "Enter new task...",
