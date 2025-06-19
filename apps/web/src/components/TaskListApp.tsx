@@ -720,13 +720,11 @@ const MainContent: React.FC = () => {
                   return;
                 }
                 
-                if (window.confirm(t('taskList.confirmDeleteCompleted'))) {
-                  try {
-                    await deleteCompletedTasks();
-                    showSuccess(t('taskList.completedDeleted'));
-                  } catch (err) {
-                    showError(err instanceof Error ? err.message : t('taskList.deleteCompletedFailed'));
-                  }
+                try {
+                  await deleteCompletedTasks();
+                  showSuccess(t('taskList.completedDeleted'));
+                } catch (err) {
+                  showError(err instanceof Error ? err.message : t('taskList.deleteCompletedFailed'));
                 }
               }}
               className="px-3 py-1 text-sm bg-red-100 dark:bg-red-900 text-red-700 dark:text-red-300 rounded hover:bg-red-200 dark:hover:bg-red-800"

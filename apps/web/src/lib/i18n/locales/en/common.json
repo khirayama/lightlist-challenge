@@ -113,7 +113,6 @@
     "sort": "Sort",
     "delete": "Delete",
     "deleteCompleted": "Delete Completed",
-    "confirmDeleteCompleted": "Delete all completed tasks?",
     "completedDeleted": "Completed tasks deleted",
     "sortingTasks": "Sorting tasks...",
     "doubleClickToEdit": "Double-click to edit",

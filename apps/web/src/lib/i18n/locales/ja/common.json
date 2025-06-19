@@ -113,7 +113,6 @@
     "sort": "並び替え",
     "delete": "削除",
     "deleteCompleted": "完了タスクを削除",
-    "confirmDeleteCompleted": "完了済みタスクを削除しますか？",
     "completedDeleted": "完了タスクを削除しました",
     "sortingTasks": "タスクを並び替えています...",
     "doubleClickToEdit": "ダブルクリックで編集",
