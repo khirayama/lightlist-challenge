@@ -3,6 +3,7 @@ import { Stack, useRouter } from 'expo-router';
 import { useTranslation } from 'react-i18next';
 import { useTheme } from '../src/contexts/ThemeContext';
 import { useAuth } from '../src/contexts/AuthContext';
+import TaskListApp from '../src/components/TaskListApp';
 
 export default function HomeScreen() {
   const { t } = useTranslation();
@@ -19,6 +20,20 @@ export default function HomeScreen() {
       console.error('Logout error:', error);
     }
   };
+
+  if (isAuthenticated) {
+    return (
+      <>
+        <Stack.Screen 
+          options={{ 
+            title: t('app.title'),
+            headerShown: false, // TaskListAppで独自のヘッダーを表示
+          }} 
+        />
+        <TaskListApp />
+      </>
+    );
+  }
 
   return (
     <>
@@ -45,58 +60,32 @@ export default function HomeScreen() {
                 {t('home.subtitle')}
               </Text>
               
-              {isAuthenticated ? (
-                <View style={styles.authSection}>
-                  <Text style={[styles.welcome, isDark ? styles.welcomeDark : styles.welcomeLight]}>
-                    {t('home.welcome', { email: user?.email })}
+              <View style={styles.buttonGroup}>
+                <TouchableOpacity 
+                  onPress={() => router.push('/login')}
+                  style={[styles.button, styles.primaryButton]}
+                >
+                  <Text style={styles.buttonText}>
+                    {t('auth.login')}
                   </Text>
-                  <View style={styles.buttonGroup}>
-                    <TouchableOpacity 
-                      onPress={() => router.push('/settings')}
-                      style={[styles.button, styles.primaryButton]}
-                    >
-                      <Text style={styles.buttonText}>
-                        {t('home.goToSettings')}
-                      </Text>
-                    </TouchableOpacity>
-                    <TouchableOpacity
-                      onPress={handleLogout}
-                      style={[styles.button, styles.dangerButton]}
-                    >
-                      <Text style={styles.buttonText}>
-                        {t('auth.logout')}
-                      </Text>
-                    </TouchableOpacity>
-                  </View>
-                </View>
-              ) : (
-                <View style={styles.buttonGroup}>
-                  <TouchableOpacity 
-                    onPress={() => router.push('/login')}
-                    style={[styles.button, styles.primaryButton]}
-                  >
-                    <Text style={styles.buttonText}>
-                      {t('auth.login')}
-                    </Text>
-                  </TouchableOpacity>
-                  <TouchableOpacity 
-                    onPress={() => router.push('/register')}
-                    style={[styles.button, styles.secondaryButton]}
-                  >
-                    <Text style={styles.buttonText}>
-                      {t('auth.register')}
-                    </Text>
-                  </TouchableOpacity>
-                  <TouchableOpacity 
-                    onPress={() => router.push('/settings')}
-                    style={[styles.button, styles.grayButton]}
-                  >
-                    <Text style={styles.buttonText}>
-                      {t('home.goToSettings')}
-                    </Text>
-                  </TouchableOpacity>
-                </View>
-              )}
+                </TouchableOpacity>
+                <TouchableOpacity 
+                  onPress={() => router.push('/register')}
+                  style={[styles.button, styles.secondaryButton]}
+                >
+                  <Text style={styles.buttonText}>
+                    {t('auth.register')}
+                  </Text>
+                </TouchableOpacity>
+                <TouchableOpacity 
+                  onPress={() => router.push('/settings')}
+                  style={[styles.button, styles.grayButton]}
+                >
+                  <Text style={styles.buttonText}>
+                    {t('home.goToSettings')}
+                  </Text>
+                </TouchableOpacity>
+              </View>
             </View>
           </View>
         </View>

@@ -70,9 +70,27 @@
     "emailRequired": "メールアドレスを入力してください",
     "passwordRequired": "パスワードを入力してください",
     "unknownError": "不明なエラーが発生しました",
-    "networkError": "ネットワークエラーが発生しました"
+    "networkError": "ネットワークエラーが発生しました",
+    "logoutConfirm": "ログアウトしますか？"
+  },
+  "taskList": {
+    "title": "タスクリスト",
+    "add": "追加",
+    "enterName": "タスクリスト名を入力...",
+    "selectPrompt": "タスクリストを選択してください"
+  },
+  "task": {
+    "enterNew": "新しいタスクを入力...",
+    "noTasks": "タスクがありません",
+    "completedStats": "{{completed}}/{{total}} 完了",
+    "emptyMessage": "まだタスクがありません。\n上記のフォームから新しいタスクを追加してください。"
   },
   "common": {
+    "add": "追加",
+    "create": "作成",
+    "cancel": "キャンセル", 
+    "delete": "削除",
+    "loading": "読み込み中...",
     "update": "更新",
     "updating": "更新中...",
     "success": "成功",

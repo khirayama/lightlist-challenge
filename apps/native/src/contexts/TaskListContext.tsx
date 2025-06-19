@@ -1,11 +1,11 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
-import { TaskList, Task, CreateTaskListRequest, CreateTaskRequest } from '../lib/types/task-list';
-import { taskListService } from '../lib/task-list';
+import { TaskListService, ApiTaskList, ApiTask, CreateTaskListRequest, CreateTaskRequest, UpdateTaskRequest } from '@lightlist/sdk';
+import { authService } from '../lib/auth';
 
 interface TaskListContextType {
-  taskLists: TaskList[];
+  taskLists: ApiTaskList[];
   currentTaskListId: string | null;
-  currentTasks: Task[];
+  currentTasks: ApiTask[];
   isLoading: boolean;
   error: string | null;
   
@@ -34,10 +34,16 @@ interface TaskListProviderProps {
   children: ReactNode;
 }
 
+// TaskListServiceインスタンスを作成
+const taskListService = new TaskListService(
+  authService.fetch.bind(authService),
+  process.env.EXPO_PUBLIC_API_URL || 'http://localhost:3001'
+);
+
 export const TaskListProvider: React.FC<TaskListProviderProps> = ({ children }) => {
-  const [taskLists, setTaskLists] = useState<TaskList[]>([]);
+  const [taskLists, setTaskLists] = useState<ApiTaskList[]>([]);
   const [currentTaskListId, setCurrentTaskListId] = useState<string | null>(null);
-  const [currentTasks, setCurrentTasks] = useState<Task[]>([]);
+  const [currentTasks, setCurrentTasks] = useState<ApiTask[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 

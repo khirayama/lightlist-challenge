@@ -1,4 +1,3 @@
-import AsyncStorage from '@react-native-async-storage/async-storage';
 import { 
   TaskList, 
   Task, 
@@ -11,49 +10,13 @@ import {
   TaskListResponse,
   TaskResponse
 } from './types/task-list';
+import { authService } from './auth';
 
 const API_BASE_URL = process.env.EXPO_PUBLIC_API_URL || 'http://localhost:3001';
 
 export class TaskListService {
-  private async getToken(): Promise<string | null> {
-    try {
-      return await AsyncStorage.getItem('token');
-    } catch (error) {
-      console.error('Failed to get token:', error);
-      return null;
-    }
-  }
-
   private async authenticatedFetch(url: string, options: RequestInit = {}): Promise<Response> {
-    const token = await this.getToken();
-    
-    if (!token) {
-      throw new Error('No access token available');
-    }
-
-    const response = await fetch(url, {
-      ...options,
-      headers: {
-        ...options.headers,
-        'Content-Type': 'application/json',
-        Authorization: `Bearer ${token}`,
-      },
-    });
-
-    if (response.status === 401) {
-      // Token expired, user needs to login again
-      try {
-        await AsyncStorage.removeItem('token');
-        await AsyncStorage.removeItem('refreshToken');
-        // Navigate to login screen - this would need to be handled by navigation
-        // For now, just throw an error
-      } catch (error) {
-        console.error('Failed to clear tokens:', error);
-      }
-      throw new Error('Authentication required');
-    }
-
-    return response;
+    return authService.authenticatedFetch(url, options);
   }
 
   async getTaskLists(): Promise<TaskList[]> {

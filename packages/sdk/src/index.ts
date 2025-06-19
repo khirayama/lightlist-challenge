@@ -5,6 +5,7 @@ export * from './types/Collaborative';
 
 // Services
 export * from './services/CollaborativeService';
+export * from './services/TaskListService';
 export type { AuthenticatedFetchFunction } from './services/CollaborativeService';
 
 // Utils

@@ -70,9 +70,27 @@
     "emailRequired": "Please enter your email",
     "passwordRequired": "Please enter your password",
     "unknownError": "An unknown error occurred",
-    "networkError": "Network error occurred"
+    "networkError": "Network error occurred",
+    "logoutConfirm": "Are you sure you want to logout?"
+  },
+  "taskList": {
+    "title": "Task Lists",
+    "add": "Add",
+    "enterName": "Enter task list name...",
+    "selectPrompt": "Please select a task list"
+  },
+  "task": {
+    "enterNew": "Enter new task...",
+    "noTasks": "No tasks",
+    "completedStats": "{{completed}}/{{total}} completed",
+    "emptyMessage": "No tasks yet.\nPlease add a new task using the form above."
   },
   "common": {
+    "add": "Add",
+    "create": "Create",
+    "cancel": "Cancel",
+    "delete": "Delete",
+    "loading": "Loading...",
     "update": "Update",
     "updating": "Updating...",
     "success": "Success",

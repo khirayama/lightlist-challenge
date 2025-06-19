@@ -32,7 +32,7 @@ export class AuthService {
   private refreshPromise: Promise<RefreshTokenResponse> | null = null;
   private refreshTimeoutId: NodeJS.Timeout | null = null;
 
-  private async authenticatedFetch(url: string, options: RequestInit = {}): Promise<Response> {
+  public async authenticatedFetch(url: string, options: RequestInit = {}): Promise<Response> {
     let token = await this.getToken();
     
     const makeRequest = async (accessToken: string) => {
@@ -447,6 +447,13 @@ export class AuthService {
       const errorData = await response.json();
       throw new Error(errorData.error || 'Failed to reset password');
     }
+  }
+
+  /**
+   * 認証付きfetchメソッドのpublicラッパー
+   */
+  public fetch(url: string, options: RequestInit = {}): Promise<Response> {
+    return this.authenticatedFetch(url, options);
   }
 }
 
