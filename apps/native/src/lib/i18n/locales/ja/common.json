@@ -92,7 +92,12 @@
     "markComplete": "タスクを完了にする",
     "markIncomplete": "タスクを未完了にする",
     "switchToManualSort": "手動並び替えに切り替え",
-    "switchToAutoSort": "自動並び替えに切り替え"
+    "switchToAutoSort": "自動並び替えに切り替え",
+    "clearDueDate": "期限を削除",
+    "deleteConfirmTitle": "タスクを削除",
+    "deleteConfirmMessage": "「{{taskContent}}」を削除しますか？",
+    "deletedMessage": "「{{taskContent}}」を削除しました",
+    "deleteTask": "タスクを削除"
   },
   "common": {
     "add": "追加",
@@ -104,6 +109,7 @@
     "update": "更新",
     "updating": "更新中...",
     "success": "成功",
-    "error": "エラー"
+    "error": "エラー",
+    "undo": "取り消し"
   }
 }

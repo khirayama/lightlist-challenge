@@ -1,6 +1,8 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { TaskListService, ApiTaskList, ApiTask, CreateTaskListRequest, CreateTaskRequest, UpdateTaskRequest } from '@lightlist/sdk';
 import { authService } from '../lib/auth';
+import { parseDateFromText } from '../lib/dateParser';
+import { useTranslation } from 'react-i18next';
 
 interface TaskListContextType {
   taskLists: ApiTaskList[];
@@ -47,6 +49,7 @@ export const TaskListProvider: React.FC<TaskListProviderProps> = ({ children }) 
   const [currentTasks, setCurrentTasks] = useState<ApiTask[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const { i18n } = useTranslation();
 
   const fetchTaskLists = async () => {
     try {
@@ -102,7 +105,21 @@ export const TaskListProvider: React.FC<TaskListProviderProps> = ({ children }) 
     
     try {
       setError(null);
-      const newTask = await taskListService.createTask(currentTaskListId, { content });
+      
+      // 日付解析を実行
+      const { content: parsedContent, dueDate } = parseDateFromText(content, i18n.language);
+      
+      // APIリクエスト用のデータを構築
+      const taskData: CreateTaskRequest = {
+        content: parsedContent || content, // 解析後の内容、または元の内容
+      };
+      
+      // 日付が解析された場合は追加
+      if (dueDate) {
+        taskData.dueDate = dueDate.toISOString();
+      }
+      
+      const newTask = await taskListService.createTask(currentTaskListId, taskData);
       setCurrentTasks(prev => [newTask, ...prev]);
       
       // タスクリストのタスク数を更新

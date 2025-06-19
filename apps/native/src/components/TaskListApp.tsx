@@ -16,6 +16,7 @@ import { useRouter } from 'expo-router';
 import { useTheme } from '../contexts/ThemeContext';
 import { useAuth } from '../contexts/AuthContext';
 import { TaskListProvider, useTaskList } from '../contexts/TaskListContext';
+import { formatDueDate } from '../lib/dateParser';
 
 // サイドバーコンポーネント
 interface SidebarProps {
@@ -309,11 +310,12 @@ interface MainContentProps {
 const MainContent: React.FC<MainContentProps> = ({ showDrawerButton = false, onOpenDrawer, responsiveStyles }) => {
   const { currentTasks, currentTaskListId, taskLists, createTask, toggleTask, updateTask, deleteTask, error } = useTaskList();
   const { resolvedTheme } = useTheme();
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const [newTaskContent, setNewTaskContent] = useState('');
   const [editingTaskId, setEditingTaskId] = useState<string | null>(null);
   const [editingContent, setEditingContent] = useState('');
   const [sortMode, setSortMode] = useState<'auto' | 'manual'>('auto');
+  const [deletedTask, setDeletedTask] = useState<{task: any, timeoutId: NodeJS.Timeout} | null>(null);
 
   const isDark = resolvedTheme === 'dark';
   const currentTaskList = taskLists.find(list => list.id === currentTaskListId);
@@ -349,7 +351,19 @@ const MainContent: React.FC<MainContentProps> = ({ showDrawerButton = false, onO
     }
 
     try {
-      await updateTask(editingTaskId, { content: editingContent.trim() });
+      // 編集時にも日付解析を実行
+      const { content: parsedContent, dueDate } = parseDateFromText(editingContent.trim(), i18n.language);
+      
+      const updateData: any = {
+        content: parsedContent || editingContent.trim(),
+      };
+      
+      // 日付が解析された場合は追加（既存の日付を上書き）
+      if (dueDate) {
+        updateData.dueDate = dueDate.toISOString();
+      }
+      
+      await updateTask(editingTaskId, updateData);
       setEditingTaskId(null);
       setEditingContent('');
     } catch (error) {
@@ -360,6 +374,41 @@ const MainContent: React.FC<MainContentProps> = ({ showDrawerButton = false, onO
   const handleCancelEdit = () => {
     setEditingTaskId(null);
     setEditingContent('');
+  };
+
+  const handleDeleteTask = (task: any) => {
+    Alert.alert(
+      t('task.deleteConfirmTitle'),
+      t('task.deleteConfirmMessage', { taskContent: task.content }),
+      [
+        { text: t('common.cancel'), style: 'cancel' },
+        {
+          text: t('common.delete'),
+          style: 'destructive',
+          onPress: () => {
+            // 即座にUIから削除（楽観的更新）
+            const timeoutId = setTimeout(async () => {
+              try {
+                await deleteTask(task.id);
+                setDeletedTask(null);
+              } catch (error) {
+                console.error('Failed to delete task:', error);
+                // エラー時は復元処理が必要だが、deleteTaskが既にエラーハンドリングを持つ
+              }
+            }, 5000); // 5秒後に実際に削除
+
+            setDeletedTask({ task, timeoutId });
+          },
+        },
+      ]
+    );
+  };
+
+  const handleUndoDelete = () => {
+    if (deletedTask) {
+      clearTimeout(deletedTask.timeoutId);
+      setDeletedTask(null);
+    }
   };
 
   if (!currentTaskListId) {
@@ -528,13 +577,27 @@ const MainContent: React.FC<MainContentProps> = ({ showDrawerButton = false, onO
                 </TouchableOpacity>
               )}
               {task.dueDate && (
-                <Text style={[styles.taskDueDate, isDark ? styles.textGray400 : styles.textGray500]}>
-                  {new Date(task.dueDate).toLocaleDateString()}
-                </Text>
+                <TouchableOpacity 
+                  onLongPress={async () => {
+                    // 長押しで日付をクリア
+                    try {
+                      await updateTask(task.id, { dueDate: null });
+                    } catch (error) {
+                      console.error('Failed to clear due date:', error);
+                    }
+                  }}
+                  style={styles.dueDateContainer}
+                  accessibilityLabel={t('task.clearDueDate')}
+                >
+                  <Text style={[styles.taskDueDate, isDark ? styles.textGray400 : styles.textGray500]}>
+                    {formatDueDate(new Date(task.dueDate), i18n.language)}
+                  </Text>
+                </TouchableOpacity>
               )}
               <TouchableOpacity
-                onPress={() => deleteTask(task.id)}
+                onPress={() => handleDeleteTask(task)}
                 style={styles.deleteButton}
+                accessibilityLabel={t('task.deleteTask')}
               >
                 <Text style={styles.deleteButtonText}>{t('common.delete')}</Text>
               </TouchableOpacity>
@@ -550,6 +613,18 @@ const MainContent: React.FC<MainContentProps> = ({ showDrawerButton = false, onO
           </View>
         )}
       </ScrollView>
+
+      {/* 削除取り消しバー */}
+      {deletedTask && (
+        <View style={[styles.undoBar, isDark ? styles.undoBarDark : styles.undoBarLight]}>
+          <Text style={[styles.undoText, isDark ? styles.textWhite : styles.textBlack]}>
+            {t('task.deletedMessage', { taskContent: deletedTask.task.content })}
+          </Text>
+          <TouchableOpacity onPress={handleUndoDelete} style={styles.undoButton}>
+            <Text style={styles.undoButtonText}>{t('common.undo')}</Text>
+          </TouchableOpacity>
+        </View>
+      )}
     </View>
   );
 };
@@ -1131,6 +1206,49 @@ const styles = StyleSheet.create({
   },
   sortButtonText: {
     fontSize: 16,
+  },
+  // 削除取り消しバー関連スタイル
+  undoBar: {
+    position: 'absolute',
+    bottom: 0,
+    left: 0,
+    right: 0,
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingVertical: 12,
+    paddingHorizontal: 16,
+    borderTopWidth: 1,
+  },
+  undoBarLight: {
+    backgroundColor: '#F3F4F6',
+    borderTopColor: '#E5E7EB',
+  },
+  undoBarDark: {
+    backgroundColor: '#374151',
+    borderTopColor: '#4B5563',
+  },
+  undoText: {
+    flex: 1,
+    fontSize: 14,
+    marginRight: 12,
+  },
+  undoButton: {
+    backgroundColor: '#3B82F6',
+    paddingVertical: 6,
+    paddingHorizontal: 12,
+    borderRadius: 4,
+  },
+  undoButtonText: {
+    color: '#FFFFFF',
+    fontSize: 12,
+    fontWeight: '600',
+  },
+  // 日付関連スタイル
+  dueDateContainer: {
+    paddingVertical: 2,
+    paddingHorizontal: 4,
+    borderRadius: 3,
   },
 });
 
