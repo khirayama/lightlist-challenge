@@ -2,6 +2,7 @@
 
 import { useTranslation } from 'react-i18next';
 import { useAuth } from '@/contexts/AuthContext';
+import TaskListApp from '@/components/TaskListApp';
 
 export default function Home() {
   const { t } = useTranslation('common');
@@ -15,6 +16,10 @@ export default function Home() {
     }
   };
 
+  if (isAuthenticated) {
+    return <TaskListApp />;
+  }
+
   return (
     <main className="flex min-h-screen flex-col items-center justify-center p-6 lg:p-24 bg-background dark:bg-gray-900">
       <div className="max-w-4xl w-full flex flex-col items-center justify-center">
@@ -26,48 +31,26 @@ export default function Home() {
             {t('home.subtitle')}
           </p>
           
-          {isAuthenticated ? (
-            <div className="space-y-4">
-              <p className="text-text-primary dark:text-white">
-                ようこそ、{user?.email}さん
-              </p>
-              <div className="flex flex-col sm:flex-row gap-4 justify-center">
-                <a 
-                  href="/settings" 
-                  className="px-6 py-3 bg-primary text-white rounded-md hover:bg-primary-600 transition-colors"
-                >
-                  {t('home.goToSettings')}
-                </a>
-                <button
-                  onClick={handleLogout}
-                  className="px-6 py-3 bg-red-600 text-white rounded-md hover:bg-red-700 transition-colors"
-                >
-                  {t('auth.logout')}
-                </button>
-              </div>
-            </div>
-          ) : (
-            <div className="flex flex-col sm:flex-row gap-4 justify-center">
-              <a 
-                href="/login" 
-                className="px-6 py-3 bg-primary text-white rounded-md hover:bg-primary-600 transition-colors"
-              >
-                {t('auth.login')}
-              </a>
-              <a 
-                href="/register" 
-                className="px-6 py-3 bg-secondary text-white rounded-md hover:bg-secondary-600 transition-colors"
-              >
-                {t('auth.register')}
-              </a>
-              <a 
-                href="/settings" 
-                className="px-6 py-3 bg-gray-600 text-white rounded-md hover:bg-gray-700 transition-colors"
-              >
-                {t('home.goToSettings')}
-              </a>
-            </div>
-          )}
+          <div className="flex flex-col sm:flex-row gap-4 justify-center">
+            <a 
+              href="/login" 
+              className="px-6 py-3 bg-primary text-white rounded-md hover:bg-primary-600 transition-colors"
+            >
+              {t('auth.login')}
+            </a>
+            <a 
+              href="/register" 
+              className="px-6 py-3 bg-secondary text-white rounded-md hover:bg-secondary-600 transition-colors"
+            >
+              {t('auth.register')}
+            </a>
+            <a 
+              href="/settings" 
+              className="px-6 py-3 bg-gray-600 text-white rounded-md hover:bg-gray-700 transition-colors"
+            >
+              {t('home.goToSettings')}
+            </a>
+          </div>
         </div>
       </div>
     </main>

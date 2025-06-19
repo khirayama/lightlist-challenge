@@ -2,9 +2,8 @@ import { Stack } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { useEffect, useState } from 'react';
 import { initI18n } from '../src/lib/i18n';
-import { ThemeProvider, useTheme } from '../src/contexts/ThemeContext';
-import { AuthProvider } from '../src/contexts/AuthContext';
-import { ToastProvider } from '../src/contexts/ToastContext';
+import { useTheme } from '../src/contexts/ThemeContext';
+import { Providers } from '../src/components/providers/Providers';
 import { ToastContainer } from '../src/components/ToastContainer';
 
 function RootLayoutContent() {
@@ -35,12 +34,8 @@ export default function RootLayout() {
   }
 
   return (
-    <ThemeProvider>
-      <AuthProvider>
-        <ToastProvider>
-          <RootLayoutContent />
-        </ToastProvider>
-      </AuthProvider>
-    </ThemeProvider>
+    <Providers>
+      <RootLayoutContent />
+    </Providers>
   );
 }
