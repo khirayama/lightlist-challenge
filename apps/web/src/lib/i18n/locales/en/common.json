@@ -129,7 +129,9 @@
     "nameUpdateFailed": "Failed to update task list name",
     "dragToReorder": "Drag to reorder",
     "sortSuccess": "Sorting completed",
-    "sortFailed": "Failed to sort"
+    "sortFailed": "Failed to sort",
+    "noCompletedTasks": "No completed tasks",
+    "deleteCompletedFailed": "Failed to delete completed tasks"
   },
   "task": {
     "inputPlaceholder": "Enter a new task...",

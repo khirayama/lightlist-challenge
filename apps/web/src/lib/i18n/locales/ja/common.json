@@ -129,7 +129,9 @@
     "nameUpdateFailed": "タスクリスト名の更新に失敗しました",
     "dragToReorder": "ドラッグして並び替え",
     "sortSuccess": "並び替えが完了しました",
-    "sortFailed": "並び替えに失敗しました"
+    "sortFailed": "並び替えに失敗しました",
+    "noCompletedTasks": "完了したタスクがありません",
+    "deleteCompletedFailed": "完了タスクの削除に失敗しました"
   },
   "task": {
     "inputPlaceholder": "新しいタスクを入力...",

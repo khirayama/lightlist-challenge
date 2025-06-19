@@ -25,6 +25,8 @@ interface TaskListContextType {
   updateTask: (taskId: string, updates: { content?: string; dueDate?: Date | null }) => Promise<void>;
   toggleTask: (taskId: string) => Promise<void>;
   deleteTask: (taskId: string) => Promise<void>;
+  sortTasks: () => void;
+  deleteCompletedTasks: () => Promise<void>;
 }
 
 const TaskListContext = createContext<TaskListContextType | undefined>(undefined);
@@ -245,6 +247,62 @@ export const TaskListProvider: React.FC<TaskListProviderProps> = ({ children }) 
     }
   };
 
+  const sortTasks = () => {
+    setCurrentTasks(prev => {
+      const sorted = [...prev].sort((a, b) => {
+        // 1. 完了・未完了で分類（未完了を上に）
+        if (a.completed !== b.completed) {
+          return a.completed ? 1 : -1;
+        }
+        
+        // 2. 日付有無で分類（日付ありを上に）
+        const aHasDate = !!a.dueDate;
+        const bHasDate = !!b.dueDate;
+        if (aHasDate !== bHasDate) {
+          return bHasDate ? 1 : -1;
+        }
+        
+        // 3. 日付がある場合は日付順（早い順）
+        if (aHasDate && bHasDate) {
+          return new Date(a.dueDate!).getTime() - new Date(b.dueDate!).getTime();
+        }
+        
+        // 4. 作成日時順（新しい順）
+        return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
+      });
+      
+      return sorted;
+    });
+  };
+
+  const deleteCompletedTasks = async () => {
+    try {
+      setError(null);
+      const completedTasks = currentTasks.filter(task => task.completed);
+      
+      // 完了タスクを一括削除
+      const deletePromises = completedTasks.map(task => taskListService.deleteTask(task.id));
+      await Promise.all(deletePromises);
+      
+      // ローカル状態を更新
+      setCurrentTasks(prev => prev.filter(task => !task.completed));
+      
+      // タスクリストのタスク数と完了数を更新
+      setTaskLists(prev => prev.map(list => 
+        list.id === currentTaskListId 
+          ? { 
+              ...list, 
+              taskCount: list.taskCount - completedTasks.length,
+              completedCount: 0
+            }
+          : list
+      ));
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to delete completed tasks');
+      throw err;
+    }
+  };
+
   // 初期化時にタスクリストを取得
   useEffect(() => {
     fetchTaskLists();
@@ -272,6 +330,8 @@ export const TaskListProvider: React.FC<TaskListProviderProps> = ({ children }) 
     updateTask,
     toggleTask,
     deleteTask,
+    sortTasks,
+    deleteCompletedTasks,
   };
 
   return (

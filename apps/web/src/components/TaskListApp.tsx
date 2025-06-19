@@ -558,7 +558,7 @@ const Sidebar: React.FC<{
 // メインコンテンツコンポーネント
 const MainContent: React.FC = () => {
   const { t } = useTranslation('common');
-  const { currentTasks, currentTaskListId, taskLists, createTask, toggleTask, deleteTask, updateTask, error } = useTaskList();
+  const { currentTasks, currentTaskListId, taskLists, createTask, toggleTask, deleteTask, updateTask, sortTasks, deleteCompletedTasks, error } = useTaskList();
   const { showSuccess, showError, showInfo } = useToast();
   const [newTaskContent, setNewTaskContent] = useState('');
   const [showShareDialog, setShowShareDialog] = useState(false);
@@ -704,8 +704,8 @@ const MainContent: React.FC = () => {
             </button>
             <button
               onClick={() => {
-                // TODO: タスクの並び替え処理
-                showInfo(t('taskList.sortingTasks'));
+                sortTasks();
+                showSuccess(t('taskList.sortSuccess'));
               }}
               className="px-3 py-1 text-sm bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded hover:bg-gray-200 dark:hover:bg-gray-600"
               title={t('taskList.sort')}
@@ -713,10 +713,20 @@ const MainContent: React.FC = () => {
               {t('taskList.sort')}
             </button>
             <button
-              onClick={() => {
-                // TODO: 完了タスクの削除処理
+              onClick={async () => {
+                const completedCount = currentTasks.filter(task => task.completed).length;
+                if (completedCount === 0) {
+                  showInfo(t('taskList.noCompletedTasks'));
+                  return;
+                }
+                
                 if (window.confirm(t('taskList.confirmDeleteCompleted'))) {
-                  showSuccess(t('taskList.completedDeleted'));
+                  try {
+                    await deleteCompletedTasks();
+                    showSuccess(t('taskList.completedDeleted'));
+                  } catch (err) {
+                    showError(err instanceof Error ? err.message : t('taskList.deleteCompletedFailed'));
+                  }
                 }
               }}
               className="px-3 py-1 text-sm bg-red-100 dark:bg-red-900 text-red-700 dark:text-red-300 rounded hover:bg-red-200 dark:hover:bg-red-800"
