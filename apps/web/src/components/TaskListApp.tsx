@@ -10,7 +10,7 @@ import { useToast } from '@/contexts/ToastContext';
 const Sidebar: React.FC = () => {
   const { t } = useTranslation('common');
   const { taskLists, currentTaskListId, selectTaskList, createTaskList, isLoading, error } = useTaskList();
-  const { user, logout } = useAuth();
+  const { user } = useAuth();
   const { showSuccess, showError, showInfo } = useToast();
   const [showCreateForm, setShowCreateForm] = useState(false);
   const [newTaskListName, setNewTaskListName] = useState('');
@@ -60,13 +60,6 @@ const Sidebar: React.FC = () => {
     setCreateError(null);
   };
 
-  const handleLogout = async () => {
-    try {
-      await logout();
-    } catch (error) {
-      console.error('Logout error:', error);
-    }
-  };
 
   return (
     <div className="w-80 bg-white dark:bg-gray-800 border-r border-gray-200 dark:border-gray-700 flex flex-col">
@@ -87,13 +80,6 @@ const Sidebar: React.FC = () => {
             >
               {t('settings.title')}
             </a>
-            <button
-              onClick={handleLogout}
-              className="px-3 py-1 text-sm bg-red-100 dark:bg-red-900 text-red-700 dark:text-red-300 rounded hover:bg-red-200 dark:hover:bg-red-800"
-              title={t('auth.logout')}
-            >
-              {t('auth.logout')}
-            </button>
           </div>
         </div>
       </div>

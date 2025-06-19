@@ -117,6 +117,21 @@ export default function Settings() {
     }
   };
 
+  const handleLogout = async () => {
+    if (window.confirm(t('auth.logoutConfirm'))) {
+      try {
+        setIsLoading(true);
+        await logout();
+        router.push('/');
+      } catch (error) {
+        console.error('Logout error:', error);
+        showError(t('auth.logoutError'));
+      } finally {
+        setIsLoading(false);
+      }
+    }
+  };
+
   if (!mounted) {
     return null;
   }
@@ -229,6 +244,25 @@ export default function Settings() {
               ))}
             </div>
           </div>
+
+          {/* ログアウト */}
+          {isAuthenticated && (
+            <div className="bg-surface dark:bg-gray-800 p-6 rounded-lg shadow-md border border-border dark:border-gray-700">
+              <h2 className="text-xl font-semibold text-text-primary dark:text-white mb-4">
+                {t('auth.logout')}
+              </h2>
+              <p className="text-text-secondary dark:text-gray-400 mb-4">
+                {t('settings.logout.description')}
+              </p>
+              <LoadingButton
+                onClick={handleLogout}
+                loading={isLoading}
+                className="px-6 py-2 bg-red-500 text-white rounded-md hover:bg-red-600 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {isLoading ? t('common.processing') : t('auth.logout')}
+              </LoadingButton>
+            </div>
+          )}
         </div>
       </div>
     </main>

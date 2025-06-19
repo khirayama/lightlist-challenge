@@ -29,7 +29,6 @@ interface SidebarProps {
 
 const Sidebar: React.FC<SidebarProps> = ({ isDrawer = false, isVisible = true, onClose, width = 320, responsiveStyles }) => {
   const { taskLists, currentTaskListId, selectTaskList, createTaskList, isLoading, error } = useTaskList();
-  const { logout } = useAuth();
   const { resolvedTheme } = useTheme();
   const router = useRouter();
   const { t } = useTranslation();
@@ -83,26 +82,6 @@ const Sidebar: React.FC<SidebarProps> = ({ isDrawer = false, isVisible = true, o
     setCreateError(null);
   };
 
-  const handleLogout = async () => {
-    Alert.alert(
-      t('auth.logout'),
-      t('auth.logoutConfirm'),
-      [
-        { text: t('common.cancel'), style: 'cancel' },
-        {
-          text: t('auth.logout'),
-          style: 'destructive',
-          onPress: async () => {
-            try {
-              await logout();
-            } catch (error) {
-              console.error('Logout error:', error);
-            }
-          },
-        },
-      ]
-    );
-  };
 
   const handleSelectTaskList = (taskListId: string) => {
     selectTaskList(taskListId);
@@ -134,14 +113,6 @@ const Sidebar: React.FC<SidebarProps> = ({ isDrawer = false, isVisible = true, o
             >
               <Text style={[styles.headerButtonText]}>
                 {t('settings.title')}
-              </Text>
-            </TouchableOpacity>
-            <TouchableOpacity
-              onPress={handleLogout}
-              style={[styles.headerButton, styles.headerButtonDanger]}
-            >
-              <Text style={styles.headerButtonTextDanger}>
-                {t('auth.logout')}
               </Text>
             </TouchableOpacity>
           </View>

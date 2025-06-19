@@ -1,5 +1,5 @@
 import { View, Text, TouchableOpacity, StyleSheet, TextInput, Alert } from 'react-native';
-import { Link, Stack } from 'expo-router';
+import { Link, Stack, useRouter } from 'expo-router';
 import { useTranslation } from 'react-i18next';
 import { useLanguage } from '../src/lib/i18n/useLanguage';
 import { useTheme } from '../src/contexts/ThemeContext';
@@ -11,7 +11,8 @@ export default function SettingsScreen() {
   const { t } = useTranslation();
   const { currentLanguage, changeLanguage } = useLanguage();
   const { theme, resolvedTheme, setTheme } = useTheme();
-  const { user, isAuthenticated, refreshAuth } = useAuth();
+  const { user, isAuthenticated, refreshAuth, logout } = useAuth();
+  const router = useRouter();
   const [isLoading, setIsLoading] = useState(false);
   const [name, setName] = useState('');
   const [isProfileLoading, setIsProfileLoading] = useState(false);
@@ -104,6 +105,32 @@ export default function SettingsScreen() {
     } finally {
       setIsProfileLoading(false);
     }
+  };
+
+  const handleLogout = async () => {
+    Alert.alert(
+      t('auth.logout'),
+      t('auth.logoutConfirm'),
+      [
+        { text: t('common.cancel'), style: 'cancel' },
+        {
+          text: t('auth.logout'),
+          style: 'destructive',
+          onPress: async () => {
+            try {
+              setIsLoading(true);
+              await logout();
+              router.push('/');
+            } catch (error) {
+              console.error('Logout error:', error);
+              Alert.alert(t('common.error'), t('auth.logoutError'));
+            } finally {
+              setIsLoading(false);
+            }
+          },
+        },
+      ]
+    );
   };
 
   return (
@@ -247,6 +274,30 @@ export default function SettingsScreen() {
         </TouchableOpacity>
       </View>
       
+      {/* ログアウト */}
+      {isAuthenticated && (
+        <View style={styles.section}>
+          <Text style={[styles.sectionTitle, isDark ? styles.titleDark : styles.titleLight]}>
+            {t('auth.logout')}
+          </Text>
+          <Text style={[styles.logoutDescription, isDark ? styles.subtitleDark : styles.subtitleLight]}>
+            {t('settings.logout.description')}
+          </Text>
+          <TouchableOpacity
+            onPress={handleLogout}
+            disabled={isLoading}
+            style={[
+              styles.logoutButton,
+              isLoading && styles.logoutButtonDisabled
+            ]}
+          >
+            <Text style={styles.logoutButtonText}>
+              {isLoading ? t('common.processing') : t('auth.logout')}
+            </Text>
+          </TouchableOpacity>
+        </View>
+      )}
+      
       <Link href="/" style={styles.link}>
         <Text style={styles.linkText}>{t('settings.backToHome')}</Text>
       </Link>
@@ -381,6 +432,32 @@ const styles = StyleSheet.create({
   updateButtonText: {
     color: 'white',
     fontSize: 14,
+    fontWeight: '600',
+  },
+  logoutDescription: {
+    fontSize: 14,
+    marginBottom: 16,
+    lineHeight: 20,
+  },
+  subtitleLight: {
+    color: '#6B7280',
+  },
+  subtitleDark: {
+    color: '#D1D5DB',
+  },
+  logoutButton: {
+    backgroundColor: '#DC2626',
+    borderRadius: 6,
+    paddingVertical: 12,
+    paddingHorizontal: 24,
+    alignSelf: 'flex-start',
+  },
+  logoutButtonDisabled: {
+    backgroundColor: '#9CA3AF',
+  },
+  logoutButtonText: {
+    color: 'white',
+    fontSize: 16,
     fontWeight: '600',
   },
 });
