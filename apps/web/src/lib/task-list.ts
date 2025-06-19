@@ -10,42 +10,13 @@ import {
   TaskListResponse,
   TaskResponse
 } from './types/task-list';
+import { authService } from './auth';
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
 
 export class TaskListService {
-  private getToken(): string | null {
-    if (typeof window === 'undefined') return null;
-    return localStorage.getItem('token');
-  }
-
   private async authenticatedFetch(url: string, options: RequestInit = {}): Promise<Response> {
-    const token = this.getToken();
-    
-    if (!token) {
-      throw new Error('No access token available');
-    }
-
-    const response = await fetch(url, {
-      ...options,
-      headers: {
-        ...options.headers,
-        'Content-Type': 'application/json',
-        Authorization: `Bearer ${token}`,
-      },
-    });
-
-    if (response.status === 401) {
-      // Token expired, user needs to login again
-      if (typeof window !== 'undefined') {
-        localStorage.removeItem('token');
-        localStorage.removeItem('refreshToken');
-        window.location.href = '/login';
-      }
-      throw new Error('Authentication required');
-    }
-
-    return response;
+    return authService.fetch(url, options);
   }
 
   async getTaskLists(): Promise<TaskList[]> {
