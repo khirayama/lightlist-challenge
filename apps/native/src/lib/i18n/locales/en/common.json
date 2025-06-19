@@ -88,13 +88,18 @@
     "enterNew": "Enter new task...",
     "noTasks": "No tasks",
     "completedStats": "{{completed}}/{{total}} completed",
-    "emptyMessage": "No tasks yet.\nPlease add a new task using the form above."
+    "emptyMessage": "No tasks yet.\nPlease add a new task using the form above.",
+    "markComplete": "Mark task as complete",
+    "markIncomplete": "Mark task as incomplete",
+    "switchToManualSort": "Switch to manual sorting",
+    "switchToAutoSort": "Switch to automatic sorting"
   },
   "common": {
     "add": "Add",
     "create": "Create",
     "cancel": "Cancel",
     "delete": "Delete",
+    "close": "Close",
     "loading": "Loading...",
     "update": "Update",
     "updating": "Updating...",

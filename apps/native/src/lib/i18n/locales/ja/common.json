@@ -88,13 +88,18 @@
     "enterNew": "新しいタスクを入力...",
     "noTasks": "タスクがありません",
     "completedStats": "{{completed}}/{{total}} 完了",
-    "emptyMessage": "まだタスクがありません。\n上記のフォームから新しいタスクを追加してください。"
+    "emptyMessage": "まだタスクがありません。\n上記のフォームから新しいタスクを追加してください。",
+    "markComplete": "タスクを完了にする",
+    "markIncomplete": "タスクを未完了にする",
+    "switchToManualSort": "手動並び替えに切り替え",
+    "switchToAutoSort": "自動並び替えに切り替え"
   },
   "common": {
     "add": "追加",
     "create": "作成",
     "cancel": "キャンセル", 
     "delete": "削除",
+    "close": "閉じる",
     "loading": "読み込み中...",
     "update": "更新",
     "updating": "更新中...",

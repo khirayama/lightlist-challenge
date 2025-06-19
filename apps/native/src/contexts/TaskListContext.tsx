@@ -11,7 +11,7 @@ interface TaskListContextType {
   
   // Task List operations
   fetchTaskLists: () => Promise<void>;
-  createTaskList: (request: CreateTaskListRequest) => Promise<void>;
+  createTaskList: (request: CreateTaskListRequest) => Promise<ApiTaskList>;
   selectTaskList: (taskListId: string) => Promise<void>;
   
   // Task operations
@@ -66,15 +66,18 @@ export const TaskListProvider: React.FC<TaskListProviderProps> = ({ children }) 
     }
   };
 
-  const createTaskList = async (request: CreateTaskListRequest) => {
+  const createTaskList = async (request: CreateTaskListRequest): Promise<ApiTaskList> => {
     try {
       setIsLoading(true);
       setError(null);
       const newTaskList = await taskListService.createTaskList(request);
-      setTaskLists(prev => [...prev, newTaskList]);
+      // 新しいタスクリストを先頭に追加（最近作成したものを上に表示）
+      setTaskLists(prev => [newTaskList, ...prev]);
       setCurrentTaskListId(newTaskList.id);
+      return newTaskList;
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to create task list');
+      throw err;
     } finally {
       setIsLoading(false);
     }
